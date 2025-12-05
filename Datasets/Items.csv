@@ -1,0 +1,101 @@
+item_id,name,price,category
+1,Crónicas de la Sombra,15.99,Ficción Fantástica
+2,El Jardín Silencioso,22.50,Novela Histórica
+3,Guía de Inversión Inteligente,35.00,Economía y Finanzas
+4,Recetas de la Abuela,18.75,Cocina
+5,Atlas Mundial Actualizado,49.99,Geografía
+6,Principios de Python Moderno,45.00,Programación
+7,El Misterio de la Calle Nueve,12.99,Thriller Policial
+8,Yoga para Principiantes,14.50,Salud y Bienestar
+9,Poemas del Despertar,9.99,Poesía
+10,Biografía de Marie Curie,28.00,Ciencia
+11,La Ciudad bajo la Niebla,16.50,Ficción Distópica
+12,Historia del Arte Renacentista,39.90,Arte
+13,Manual de Liderazgo Ágil,33.25,Negocios
+14,Postres Rápidos y Caseros,17.00,Cocina
+15,El Universo en Expansión,26.99,Astronomía
+16,Desarrollo Web con React,55.00,Programación
+17,El Caso del Collar Perdido,11.50,Thriller Policial
+18,Meditación Guiada,13.00,Salud y Bienestar
+19,Versos Olvidados,10.50,Poesía
+20,La Revolución Industrial,30.50,Historia
+21,El Último Dragón,19.99,Ficción Fantástica
+22,Las Arenas del Tiempo,24.00,Novela Histórica
+23,Finanzas Personales 2026,32.00,Economía y Finanzas
+24,Tapas Españolas,16.00,Cocina
+25,Mapas Antiguos,47.00,Geografía
+26,Bases de Datos SQL,40.00,Programación
+27,Asesinato en el Tren Nocturno,13.99,Thriller Policial
+28,Nutrición Deportiva,15.50,Salud y Bienestar
+29,Sonetos al Mar,9.50,Poesía
+30,El Legado de Einstein,27.50,Ciencia
+31,Mundo Virtual 3.0,17.50,Ficción Distópica
+32,Dibujo Clásico,36.00,Arte
+33,Gestión de Proyectos PMP,38.00,Negocios
+34,Panadería Artesanal,19.50,Cocina
+35,Agujeros Negros,29.99,Astronomía
+36,Algoritmos Avanzados en Java,52.00,Programación
+37,El Silencio del Testigo,12.00,Thriller Policial
+38,Remedios Naturales,14.00,Salud y Bienestar
+39,Rimas de la Luna,10.99,Poesía
+40,Civilizaciones Antiguas,31.00,Historia
+41,El Oráculo Perdido,18.99,Ficción Fantástica
+42,Voces de la Guerra Civil,23.50,Novela Histórica
+43,Criptomonedas y Blockchain,37.00,Economía y Finanzas
+44,Cocina Vegetariana,18.00,Cocina
+45,Culturas Indígenas de América,42.00,Geografía
+46,Machine Learning Básico,50.00,Programación
+47,Crimen en la Mansión,14.99,Thriller Policial
+48,Masajes Terapéuticos,16.50,Salud y Bienestar
+49,Cuentos Breves de Otoño,8.99,Poesía
+50,Geología Terrestre,25.00,Ciencia
+51,El Laberinto de Cristal,15.50,Ficción Distópica
+52,Escultura Moderna,34.00,Arte
+53,Marketing Digital,31.50,Negocios
+54,Recetas Veganas,17.50,Cocina
+55,Meteoritos y Cometas,28.99,Astronomía
+56,Ciberseguridad Esencial,48.00,Programación
+57,La Venganza del Inspector,13.50,Thriller Policial
+58,Aromaterapia,12.50,Salud y Bienestar
+59,La Balada del Viajero,11.99,Poesía
+60,Mitología Griega,29.00,Historia
+61,El Tesoro de Atlantis,20.50,Ficción Fantástica
+62,Época Medieval,25.50,Novela Histórica
+63,Bolsa de Valores Avanzada,41.00,Economía y Finanzas
+64,Cocina Mexicana Auténtica,19.00,Cocina
+65,Parques Nacionales,45.00,Geografía
+66,Redes Neuronales,60.00,Programación
+67,Testigo Ocular,15.99,Thriller Policial
+68,Dieta Keto,17.00,Salud y Bienestar
+69,Haikus Japoneses,10.00,Poesía
+70,Filosofía Clásica,33.00,Historia
+71,Sueños de Androides,16.99,Ficción Distópica
+72,Fotografía Digital,37.50,Arte
+73,Estrategias de Venta,34.50,Negocios
+74,Repostería Francesa,20.00,Cocina
+75,La Vida en Marte,30.99,Astronomía
+76,Desarrollo de Videojuegos Unity,58.00,Programación
+77,Sin Rastro,12.50,Thriller Policial
+78,Pilates en Casa,13.50,Salud y Bienestar
+79,Cartas de Amor Perdidas,9.00,Poesía
+80,Guerras Mundiales,35.50,Historia
+81,La Profecía del Sol,17.99,Ficción Fantástica
+82,Egipto Faraónico,26.50,Novela Histórica
+83,Microeconomía Aplicada,36.50,Economía y Finanzas
+84,Cócteles Clásicos,15.00,Cocina
+85,Mares y Océanos,43.00,Geografía
+86,Data Science con R,54.00,Programación
+87,El Último Recurso,14.50,Thriller Policial
+88,Yoga Aéreo,15.00,Salud y Bienestar
+89,El Eco de las Palabras,11.00,Poesía
+90,Renacimiento Cultural,32.50,Historia
+91,Robots en el Tiempo,14.99,Ficción Distópica
+92,Caligrafía Japonesa,35.00,Arte
+93,Negociación y Persuasión,39.00,Negocios
+94,Cocina Tailandesa,21.00,Cocina
+95,El Clima y el Cambio Global,31.99,Astronomía
+96,Cloud Computing AWS,57.00,Programación
+97,La Huella Digital,16.00,Thriller Policial
+98,Fitness Funcional,18.50,Salud y Bienestar
+99,Poemas del Infinito,12.00,Poesía
+100,La Conquista del Espacio,34.00,Ciencia
