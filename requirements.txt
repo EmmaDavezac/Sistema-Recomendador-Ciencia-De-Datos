@@ -1,0 +1,6 @@
+polars
+scikit-learn
+seaborn
+pandas
+numpy
+pyarrow
