@@ -7,8 +7,8 @@ import sqlite3 #Librería para manejar bases de datos SQLite
 import os #Librería para operaciones del sistema operativo
 import json #Librería para manejo de JSON
 from fastapi import FastAPI, HTTPException, Query #Librería para crear APIs
-from pydantic import BaseModel # Librería para validación de datos y creación de modelos
-from typing import List, Dict, Any, Optional # Tipos de datos para anotaciones
+from pydantic import BaseModel,ConfigDict # Librería para validación de datos y creación de modelos
+from typing import List, Optional # Tipos de datos para anotaciones
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # --- VARIABLES DE CONFIGURACIÓN ---
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -22,13 +22,7 @@ PREFERENCES_URL = './Datasets/Preferences.csv'# Ruta local del archivo CSV de pr
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class UserAttributes(BaseModel):# Modelo para los atributos del usuario
     # Estos campos se mantienen para la DOCUMENTACIÓN, pero se guardan dinámicamente.
-    telephone: Optional[str] = None
-    birthdate: Optional[str] = None
-    gender: Optional[str] = None
-    created_at: Optional[str] = None
-    
-    class Config:
-        extra = "allow" 
+    model_config = ConfigDict(extra="allow", exclude_none=True)
 
 class User(BaseModel):# Modelo para el usuario
     id: int

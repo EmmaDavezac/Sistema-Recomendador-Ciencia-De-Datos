@@ -12,6 +12,12 @@ Las herramientas fueron elegidas para que la implementación sea lo mas sencilla
 * **SQLite**: Para implementar la base de datos, porque no necesita un servidor externo para la base de datos, lo que nos simplifica la implementacion.
 * **Pandas**: Para la manipulacion de datos, en versiones iniciales usamos Polars, pero terminamos usar Pandas porque teniamos mas experiencia con esta..
 
+### Consideraciones 
+* Como no se indican explicitamente los productos en la documentacion, creamos 100 productos genericos para la demostracion del sistema. En este caso son libros, pero este programa funciona para cualquier tipo de items siempre que se respete el formato.
+* Creamos un conjunto de 700 usuarios utilizando IA para la demostracion del sistema.
+* Creamos aproximadamente 5600 preferencias de manera aleatoria mediante IA entre los Usuarios y los Items para la demostracion del sistema.
+* Estos conjuntos se pueden reemplazar por datos verdaderos.
+
 ### Caracteristicas del Sistema
 * **Filtro Colaborativo Basado en Usuarios**: Se enfoca en encontrar usuarios con gustos similares para generar recomendaciones.
 * **Medición de Preferencias mediante ratings**: Se utiliza un valor numérico (*preference_value*) para cuantificar la interacción del usuario con el ítem.
