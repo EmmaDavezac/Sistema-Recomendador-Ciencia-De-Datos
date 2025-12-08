@@ -1,85 +1,128 @@
-import pandas as pd
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-import sqlite3
-import os
-from fastapi import FastAPI, HTTPException, Query
-from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
-
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# --- IMPORTACIÓN DE LIBRERÍAS ---
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+import pandas as pd #Librería para manipulación de datos
+from sklearn.metrics.pairwise import cosine_similarity #Librería para cálculo de similitud del coseno
+import sqlite3 #Librería para manejar bases de datos SQLite
+import os #Librería para operaciones del sistema operativo
+import json #Librería para manejo de JSON
+from fastapi import FastAPI, HTTPException, Query #Librería para crear APIs
+from pydantic import BaseModel # Librería para validación de datos y creación de modelos
+from typing import List, Dict, Any, Optional # Tipos de datos para anotaciones
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # --- VARIABLES DE CONFIGURACIÓN ---
-DB_NAME = 'recommendation_system.db'
-# URLs originales de tus datos
-USERS_URL = './Datasets/Users.csv'
-ITEMS_URL = './Datasets/Items.csv'
-PREFERENCES_URL = './Datasets/Preferences.csv'
-
-# --- 1. MODELOS PYDANTIC (Para la estructura de la API) ---
-
-class UserAttributes(BaseModel):
-    # Definimos los atributos que esperamos del CSV/DB
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+DB_NAME = 'recommendation_system.db'# Nombre del archivo de la base de datos SQLite
+USERS_URL = './Datasets/Users.csv'# Ruta local del archivo CSV de usuarios
+ITEMS_URL = './Datasets/Items.csv'# Ruta local del archivo CSV de items
+PREFERENCES_URL = './Datasets/Preferences.csv'# Ruta local del archivo CSV de preferencias
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# --- MODELOS PYDANTIC
+#ESTOS MODELOS SE USAN PARA VALIDAR Y ESTRUCTURAR LOS DATOS DE ENTRADA Y SALIDA DE LA API
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+class UserAttributes(BaseModel):# Modelo para los atributos del usuario
+    # Estos campos se mantienen para la DOCUMENTACIÓN, pero se guardan dinámicamente.
     telephone: Optional[str] = None
     birthdate: Optional[str] = None
     gender: Optional[str] = None
     created_at: Optional[str] = None
     
-    # Esto permite que Pydantic acepte cualquier campo extra en 'attributes' si es necesario
     class Config:
         extra = "allow" 
 
-class User(BaseModel):
+class User(BaseModel):# Modelo para el usuario
     id: int
     username: str
-    attributes: UserAttributes = UserAttributes() # Inicializamos con el modelo de atributos
+    attributes: UserAttributes = UserAttributes()
 
-class ItemAttributes(BaseModel):
+class ItemAttributes(BaseModel):# Modelo para los atributos del item
+    price: Optional[float] = None
+    category: Optional[str] = None
+    
     class Config:
         extra = "allow"
 
-class Item(BaseModel):
+class Item(BaseModel):# Modelo para el item
     id: int
     name: str
-    attributes: ItemAttributes = {}
+    attributes: ItemAttributes = ItemAttributes()
 
-class ItemArray(BaseModel):
+class ItemArray(BaseModel):# Modelo para una lista de items
     items: List[Item]
 
-# --- 2. LÓGICA DE DATOS Y PRE-PROCESAMIENTO ---
-
-def initialize_sqlite_db():
-    """Crea y puebla la base de datos SQLite solo si el archivo DB no existe."""
-    if os.path.exists(DB_NAME):
-        print(f"✅ Base de datos '{DB_NAME}' ya existe.") 
-        return
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# --- LÓGICA DE DATOS Y PRE-PROCESAMIENTO ---
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+def inicializar_db():
+    """
+    Crea y puebla la base de datos SOLO si el archivo DB no existe.
+    Establece 'id' como CLAVE PRIMARIA explícita en la tabla 'users'.
+    """
     
-    print(f"🔄 Base de datos '{DB_NAME}' no encontrada. Inicializando y cargando datos...")
-    try:
-        conn = sqlite3.connect(DB_NAME)
+    if os.path.exists(DB_NAME):
+        print(f" Base de datos '{DB_NAME}' ya existe. Saltando importacion desde CSV.")
+        return
         
-        # Cargar datos desde las URLs
+    print(f"🔄 Base de datos '{DB_NAME}' no encontrada. Inicializando y cargando CSV...")
+    
+    try:
+        # Cargar datos desde las URLs locales (Solo se ejecuta si la DB NO existe)
         users_df = pd.read_csv(USERS_URL)
         items_df = pd.read_csv(ITEMS_URL)
         preferences_df = pd.read_csv(PREFERENCES_URL)
         
-        # Escribir en la base de datos 
-        users_df.to_sql('users', conn, if_exists='replace', index=False)
-        items_df.to_sql('items', conn, if_exists='replace', index=False)
-        preferences_df.to_sql('preferences', conn, if_exists='replace', index=False)
+        # --- PRE-PROCESAMIENTO CLAVE PARA CONSOLIDAR ATTRIBUTES ---
         
-        conn.close()
-        print("🎉 Base de datos SQLite cargada con éxito.")
+        if 'id' not in users_df.columns:
+            id_cols = [col for col in users_df.columns if 'id' in col.lower()]
+            if id_cols:
+                 users_df = users_df.rename(columns={id_cols[0]: 'id'})
+
+        BASE_KEYS = ['id', 'username']
+        
+        def serialize_attributes(row):
+            attributes = {
+                k: v for k, v in row.items() 
+                if k not in BASE_KEYS and pd.notna(v)
+            }
+            return json.dumps(attributes)
+
+        users_df['attributes_json'] = users_df.apply(serialize_attributes, axis=1)
+        
+        # Mantenemos todas las columnas base necesarias (id, username, attributes_json)
+        users_df_clean = users_df[BASE_KEYS + ['attributes_json']].copy()# Nos aseguramos de tener solo las columnas necesarias
+        # --- FIN PRE-PROCESAMIENTO ---
+    
+        conn = sqlite3.connect(DB_NAME)# Abrimos la conexión a la base de datos
+        cursor = conn.cursor()
+         # Creamos la tabla de usuarios con 'id' como PRIMARY KEY
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY,
+                username TEXT,
+                attributes_json TEXT
+            );
+        """)
+        # Usamos if_exists='append' porque la tabla ya fue creada con el esquema correcto.
+        # Desactivamos el índice de Pandas (index=False) porque 'id' ya está como columna.
+        users_df_clean.to_sql('users', conn, if_exists='append', index=False)# Insertamos los usuarios en la base de datos
+        items_df.to_sql('items', conn, if_exists='replace', index=False)# Insertamos los items en la base de datos
+        preferences_df.to_sql('preferences', conn, if_exists='replace', index=False)# Insertamos las preferencias en la base de datos
+        conn.commit()# Guardamos los cambios
+        conn.close()# Cerramos la conexión a la base de datos
+        print(" Base de datos SQLite creada y cargada con éxito.")
             
-    except Exception as e:
-        print(f"❌ Error al inicializar SQLite: {e}")
-        # Se lanza la excepción para detener la aplicación si falla la carga inicial
+    except Exception as e: # Manejo de errores generales
+        print(f" Error al inicializar SQLite: {e}")
         raise
 
-def load_and_process_data():
-    """Carga los datos de SQLite y genera la matriz normalizada y de similitud."""
+def cargar_y_procesamiento_inicial():
+    """Carga los datos de SQLite (una vez que la DB existe) y genera las matrices necesarias para el sistema recomendador.
+    Returns:
+        tuple: (df, matrix_norm, user_similarity, users_df, items_df)"""
     
-    initialize_sqlite_db()
+    inicializar_db() #Inicializa la DB si no existe
     
-    # Consulta SQL para unir Items y Preferences (corregida para evitar caracteres extraños)
     SQL_QUERY = """
 SELECT 
     T1.item_id,
@@ -93,150 +136,148 @@ INNER JOIN
 ON 
     T1.item_id = T2.item_id;
 """
-    conn = sqlite3.connect(DB_NAME)
-    df = pd.read_sql_query(SQL_QUERY, conn)
-    users_df = pd.read_sql_query("SELECT * FROM users", conn)
-    items_df = pd.read_sql_query("SELECT * FROM items", conn)
-    conn.close()
+    
+    conn = sqlite3.connect(DB_NAME)# Abrimos la conexión a la base de datos
+    df = pd.read_sql_query(SQL_QUERY, conn)# Leemos las preferencias uniendo items y preferences
+    users_df = pd.read_sql_query("SELECT id, username, attributes_json FROM users", conn)# Leemos los usuarios desde la base de datos
+    items_df = pd.read_sql_query("SELECT * FROM items", conn)# Leemos los items desde la base de datos
+    conn.close()# Cerramos la conexión a la base de datos
 
-    # --- CORRECCIÓN DE COLUMNA 'id' EN USERS_DF (Respuesta a tu error anterior) ---
-    if 'id' not in users_df.columns:
-        if 'User_ID' in users_df.columns:
-            users_df = users_df.rename(columns={'User_ID': 'id'})
-        elif 'user_id' in users_df.columns:
-            users_df = users_df.rename(columns={'user_id': 'id'})
-        elif 'ID' in users_df.columns:
-            users_df = users_df.rename(columns={'ID': 'id'})
-        else:
-            print("ADVERTENCIA: No se encontró la columna de ID esperada en USERS_DF. Usando la primera columna como ID.")
-            # Si aún falla, usamos la primera columna como último recurso
-            if users_df.shape[1] > 0:
-                 users_df = users_df.rename(columns={users_df.columns[0]: 'id'})
-                 
-    # Asegúrate de que el ID es entero para comparaciones
-    if 'id' in users_df.columns:
+    
+    if 'attributes_json' in users_df.columns:# Deserialización de los atributos del usuario
+        users_df['attributes_json'] = users_df['attributes_json'].apply(
+            lambda x: json.loads(x) if pd.notna(x) and isinstance(x, str) else {}
+        )
+
+    if 'id' in users_df.columns: #nos aseguramos que el id sea int
         users_df['id'] = users_df['id'].astype(int)
-    # -----------------------------------------------------------------------------
 
-    # --- PROCESAMIENTO DE LOS DATOS (Matrices) ---
-    matrix = df.pivot_table(index='user_id', columns='name', values='preference_value')
-    user_item_matrix = matrix.copy()
-
-    # Normalización de la matriz (Puntuación Z)
-    row_mean = user_item_matrix.mean(axis=1)
-    row_std = user_item_matrix.std(axis=1)
-    # Evita la división por cero si la desviación es 0
-    row_std[row_std == 0] = 1 
-    matrix_norm = user_item_matrix.sub(row_mean, axis=0).div(row_std, axis=0)
-
-    # Rellenamos los NaN con 0 para el cálculo de similitud
-    user_item_matrix_filled = matrix_norm.fillna(0)
-
-    # Cálculo de la similitud del coseno
-    user_similarity_cosine = cosine_similarity(user_item_matrix_filled)
-
-    # Creación del DataFrame de similitud
-    user_ids = user_item_matrix_filled.index.tolist()
-    user_similarity = pd.DataFrame(
+    #Creamos las matrices necesarias para el sistema recomendador
+    matrix = df.pivot_table(index='user_id', columns='name', values='preference_value')# Creamos la matriz usuario-item
+    user_item_matrix = matrix.copy()# hacemos una copia para trabajar sin alterar la original
+    row_mean = user_item_matrix.mean(axis=1)# Calculamos el promedio por fila
+    row_std = user_item_matrix.std(axis=1)# Calculamos la desviación estándar por fila
+    row_std[row_std == 0] = 1 # Evitamos división por cero
+    matrix_norm = user_item_matrix.sub(row_mean, axis=0).div(row_std, axis=0)# Normalizamos la matriz usuario-item
+    user_item_matrix_filled = matrix_norm.fillna(0)# Rellenamos los valores NaN con 0 para calcular similitudes
+    user_similarity_cosine = cosine_similarity(user_item_matrix_filled)# Calculamos la similitud del coseno entre los usuarios
+    user_ids = user_item_matrix_filled.index.tolist()# Obtenemos los IDs de usuario
+    user_similarity = pd.DataFrame( #Creamos la matriz de similitud de usuarios
         user_similarity_cosine, 
         index=user_ids, 
         columns=user_ids
     )
-
-    # Convertir a string para la búsqueda consistente en la matriz de similitud
-    user_similarity.index = user_similarity.index.astype(str)
-    user_similarity.columns = user_similarity.columns.astype(str)
-    
+    user_similarity.index = user_similarity.index.astype(str)# Aseguramos que los índices sean strings
+    user_similarity.columns = user_similarity.columns.astype(str)# Aseguramos que las columnas sean strings
+    # Retornamos los datos procesados
     return df, matrix_norm, user_similarity, users_df, items_df
 
-# --- Carga y pre-cálculo de datos global al inicio del servidor ---
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# --- Carga y precálculo de datos al inicio del servidor ---
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 try:
-    DF, MATRIX_NORM, USER_SIMILARITY, USERS_DF, ITEMS_DF = load_and_process_data()
-except Exception as e:
-    print(f"ERROR FATAL: La aplicación no pudo iniciar debido al error de carga/procesamiento: {e}")
-    # En un entorno de producción, podrías manejar la salida aquí.
+    DF, MATRIX_NORM, USER_SIMILARITY, USERS_DF, ITEMS_DF = cargar_y_procesamiento_inicial()#
+except Exception as e:# Manejo de errores en la carga inicial
+    print(f" ERROR FATAL: La aplicación no pudo iniciar debido al error de carga/procesamiento: {e}")
 
-# --- 3. LÓGICA DE RECOMENDACIÓN (Funciones) ---
-
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# --- LÓGICA DE RECOMENDACIÓN ---
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def user_has_preferences(user_id: int) -> bool:
+    """Verifica si un usuario tiene preferencias registradas en la matriz normalizada.
+    Args:
+        user_id (int): ID del usuario a verificar.
+    Returns:
+        bool: True si el usuario tiene preferencias, False en caso contrario."""
     return user_id in MATRIX_NORM.index
 
 def cold_start_items_recommendations(number_max_of_recommendations: int) -> list: 
-    """Genera recomendaciones para usuarios nuevos basadas en los items más populares."""
-    top_items = DF.groupby('name')['preference_value'].count().sort_values(ascending=False)
-    return top_items.head(number_max_of_recommendations).index.tolist()
+    """Genera recomendaciones para usuarios nuevos basadas en los items más populares.
+    Args:
+        number_max_of_recommendations (int): Número máximo de items a recomendar.
+    Returns: 
+        list: Lista de nombres de items recomendados."""
+    top_items = DF.groupby('name')['preference_value'].count().sort_values(ascending=False)# Contamos la cantidad de preferencias por item y los ordenamos
+    return top_items.head(number_max_of_recommendations).index.tolist()# Retornamos los nombres de los items más populares
 
 def get_recommendations_logic(user_id: int, number_max_of_recommendations: int) -> list:
-    """Función unificada que aplica Cold Start o Colaborativo."""
-    
-    if user_has_preferences(user_id):
-        # Lógica Colaborativa
-        user_id_str = str(user_id)
-        user_items = MATRIX_NORM.loc[user_id]
-        items_comprados = user_items[user_items.notna()].index.tolist()
+    """Genera recomendaciones para un usuario específico, ya sea basado en usuarios similares o en los items más populares si el usuario es nuevo.
+    Args:
+        user_id (int): ID del usuario para el cual se generan recomendaciones.
+        number_max_of_recommendations (int): Número máximo de items a recomendar.
+    Returns:
+        list: Lista de nombres de items recomendados.
+    """
+    if user_has_preferences(user_id): # Usuario existente con preferencias
+        user_id_str = str(user_id)# Convertimos a string para coincidir con los índices del DataFrame
+        user_items = MATRIX_NORM.loc[user_id]# Obtenemos las preferencias del usuario
+        items_comprados = user_items[user_items.notna()].index.tolist()# Items comprados por el usuario
 
-        similar_users = (
+        similar_users = ( # Obtenemos usuarios similares
             USER_SIMILARITY[user_id_str]
             .sort_values(ascending=False)
             .drop(user_id_str, errors='ignore')
             .head(number_max_of_recommendations)
         )
-        similar_users_ids = similar_users.index.astype(int).tolist()
-        
+        similar_users_ids = similar_users.index.astype(int).tolist()# IDs de usuarios similares 
         sum_similarity = similar_users.sum()
-        
-        if similar_users.empty or sum_similarity == 0:
-            return cold_start_items_recommendations(number_max_of_recommendations)
-
-        similar_user_preferences = MATRIX_NORM.loc[similar_users_ids]
+        if similar_users.empty or sum_similarity == 0:# No hay usuarios similares
+            return cold_start_items_recommendations(number_max_of_recommendations)# Recomendaciones por popularidad
+        similar_user_preferences = MATRIX_NORM.loc[similar_users_ids]# Preferencias de usuarios similares
         items_comprados_por_similares = similar_user_preferences.columns[
             similar_user_preferences.notna().any()
         ].tolist()
-        candidate_items = list(set(items_comprados_por_similares) - set(items_comprados))
-        
-        if not candidate_items:
-            return cold_start_items_recommendations(number_max_of_recommendations)
-
-        candidate_matrix = similar_user_preferences[candidate_items].copy()
-        weighted_scores = candidate_matrix.multiply(similar_users, axis=0)
-        
-        recommendation_scores = weighted_scores.sum(axis=0) / sum_similarity
-        
-        recomendaciones_ordenadas = recommendation_scores.sort_values(ascending=False)
-        return recomendaciones_ordenadas.head(number_max_of_recommendations).index.tolist()
-
+        candidate_items = list(set(items_comprados_por_similares) - set(items_comprados))# Items candidatos para recomendar
+        if not candidate_items:# No hay items candidatos
+            return cold_start_items_recommendations(number_max_of_recommendations)# Recomendaciones por popularidad
+        candidate_matrix = similar_user_preferences[candidate_items].copy()# Matriz de items candidatos
+        weighted_scores = candidate_matrix.multiply(similar_users, axis=0)# Puntuaciones ponderadas
+        recommendation_scores = weighted_scores.sum(axis=0) / sum_similarity# Puntuaciones finales
+        recomendaciones_ordenadas = recommendation_scores.sort_values(ascending=False)# Ordenamos las recomendaciones
+        return recomendaciones_ordenadas.head(number_max_of_recommendations).index.tolist()# Retornamos los nombres de los items recomendados
     else:
-        # Cold Start
-        return cold_start_items_recommendations(number_max_of_recommendations)
+        # Usuario nuevo sin preferencias
+        return cold_start_items_recommendations(number_max_of_recommendations)# Recomendaciones por popularidad
 
-# --- 4. APLICACIÓN FASTAPI Y ENDPOINTS ---
-
-app = FastAPI(
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# --- APLICACIÓN FASTAPI ---
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Inicialización de la aplicación FastAPI
+app = FastAPI( 
     title="Sistema Recomendador - Ciencia de Datos 2025",
-    description="API para brindar recomendaciones de items.",
+    description="Este es el ejemplo de la API a desarrollar para la cátedra de Ciencia de Datos, con la finalidad de brindar recomendaciones de items para un determinado usuario del sistema. A continuación se detallan los endpoints que deberán desarrollar, utilizando el lenguaje de su preferencia",
     version="1.0.0",
     contact={"email": "gd.rottoli@gmail.com"},
     openapi_tags=[{"name": "Sistema recomendador"}]
 )
 
+#----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#--- ENDPOINTS DE LA API ---
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Endpoint: /user (POST)
 @app.post("/user", response_model=User, tags=["Sistema recomendador"])
 def create_user(user: User):
-    """Insertar un nuevo usuario a la base de datos."""
+    """Insertar un nuevo usuario a la base de datos, serializando atributos a JSON.
+            args:
+                user (User): Datos del usuario a crear.
+            returns:
+                User: Datos del usuario creado.
+    """
     try:
-        conn = sqlite3.connect(DB_NAME)
-        user_data = user.model_dump(exclude_defaults=True)
-        # Solo insertamos ID y Username en la tabla 'users'
-        user_to_insert = pd.DataFrame([{'id': user_data['id'], 'username': user_data['username']}])
-        
-        user_to_insert.to_sql('users', conn, if_exists='append', index=False)
-        conn.close()
-        
-        # NOTA: Para que el usuario sea inmediatamente visible en USERS_DF,
-        # necesitarías re-ejecutar load_and_process_data() o actualizar USERS_DF manualmente.
-        
-        return user
-    except Exception as e:
+        with sqlite3.connect(DB_NAME) as conn: # Abrimos la conexión a la base de datos
+            cursor = conn.cursor()
+            user_data = user.model_dump(exclude_defaults=True)
+            attributes_to_save = user_data.get('attributes', {})
+            attributes_json = json.dumps(attributes_to_save)
+            insert_query = "INSERT INTO users (id, username, attributes_json) VALUES (?, ?, ?);"
+            cursor.execute(insert_query, (user_data['id'], user_data['username'], attributes_json))# Insertamos el usuario en la base de datos
+        return user# Retornamos el usuario creado
+    except sqlite3.IntegrityError as e: # Manejo de clave primaria duplicada
+        raise HTTPException(
+            status_code=400, 
+            detail={"code": "DUPLICATE_ID", "message": f"El usuario con ID {user.id} ya existe: {e}"}
+        )
+    except Exception as e:# Manejo general de errores
         raise HTTPException(
             status_code=500, 
             detail={"code": "DB_ERROR", "message": f"Error al crear usuario: {e}"}
@@ -245,31 +286,31 @@ def create_user(user: User):
 # Endpoint: /user/{userId} (GET)
 @app.get("/user/{userId}", response_model=User, tags=["Sistema recomendador"])
 def get_user(userId: int):
-    """Obtener los datos del usuario, incluyendo atributos detallados."""
-    
-    if 'id' not in USERS_DF.columns:
-        raise HTTPException(status_code=500, detail={"code": "DATA_ERROR", "message": "Users DataFrame no contiene la columna 'id'."})
-
-    user_data = USERS_DF[USERS_DF['id'] == userId]
-    
-    if user_data.empty:
+    """Obtener los datos del usuario, leyendo directamente de SQLite.
+            args:
+                userId (int): ID del usuario a obtener.
+            returns:
+                User: Datos del usuario solicitado.
+    """
+    conn = sqlite3.connect(DB_NAME)# Abrimos la conexión a la base de datos 
+    # Leemos el registro desde la base de datos
+    query = "SELECT id, username, attributes_json FROM users WHERE id = ?"
+    user_data = pd.read_sql_query(query, conn, params=(userId,))
+    conn.close()# Cerramos la conexión
+    if user_data.empty:# Usuario no encontrado
         raise HTTPException(status_code=404, detail={"code": "USER_NOT_FOUND", "message": f"User {userId} not found"})
-
     user_record = user_data.iloc[0].to_dict()
-    
-    # 1. Definir las columnas a excluir del diccionario de atributos
-    # user_id es el nombre real de la columna en la BD si el CSV usó 'user_id'
-    # 'id' es el nombre que le dimos al renombrar
-    exclude_keys = ['id', 'username', 'user_id'] 
-    
-    # 2. Construir el diccionario de atributos
-    user_attributes = {
-        key: value 
-        for key, value in user_record.items() 
-        if key not in exclude_keys
-    }
-    
-    # 3. Mapeo a Pydantic
+    # Deserialización de JSON
+    attributes_json_str = user_record.get('attributes_json')
+    if pd.notna(attributes_json_str) and isinstance(attributes_json_str, str):
+        try:
+            user_attributes = json.loads(attributes_json_str)
+        except json.JSONDecodeError:
+            user_attributes = {} # Error de JSON, retornamos vacío
+    else:
+        user_attributes = {}
+    # Mapeo los datos 
+    #retornamos el usuario
     return User(
         id=user_record['id'],
         username=user_record.get('username', f"user_{userId}"),
@@ -278,49 +319,39 @@ def get_user(userId: int):
 
 # Endpoint: /user/{userId}/recommend (GET)
 @app.get("/user/{userId}/recommend", response_model=ItemArray, tags=["Sistema recomendador"])
-def recommend_items(
-    userId: int, 
-    n: int = Query(5, description="numero de items a recomendar.", ge=1, le=50) # Valor por defecto 5
-):
-    """Obtener n recomendaciones para un usuario determinado."""
-    
-    # 1. Validación de existencia de usuario
-    if 'id' not in USERS_DF.columns or userId not in USERS_DF['id'].values:
-        raise HTTPException(status_code=404, detail={"code": "USER_NOT_FOUND", "message": f"User {userId} not found"})
-        
+def recommend_items(userId: int, n: int = Query(5, description="numero de items a recomendar.", ge=1, le=50)):
+    """Generar recomendaciones de items para un usuario específico.
+            args:
+                userId (int): ID del usuario para el cual se generan recomendaciones.
+                n (int): Número de items a recomendar (por defecto 5, máximo 50).
+            returns: 
+                ItemArray: Lista de items recomendados.
+    """
+    conn = sqlite3.connect(DB_NAME)# Abrimos la conexión a la base de datos
+    # Leer el registro directamente desde la base de datos
+    query = "SELECT id, username, attributes_json FROM users WHERE id = ?"
+    user_data = pd.read_sql_query(query, conn, params=(userId,))
+    conn.close()# Cerramos la conexión a la base de datos
+    if user_data.empty:# Usuario no encontrado
+        raise HTTPException(status_code=404, detail={"code": "USER_NOT_FOUND", "message": f"User {userId} not found"}) 
     try:
-        # 2. Obtener la lista de nombres de ítems recomendados
-        recommended_item_names = get_recommendations_logic(userId, n)
-
-        # 3. Convertir los nombres recomendados a objetos Item
-        # Filtrar ITEMS_DF por los nombres de ítems recomendados
-        recommended_items_data = ITEMS_DF[ITEMS_DF['name'].isin(recommended_item_names)].to_dict('records')
-        
+        recommended_item_names = get_recommendations_logic(userId, n)# Obtenemos los nombres de items recomendados
+        recommended_items_data = ITEMS_DF[ITEMS_DF['name'].isin(recommended_item_names)].to_dict('records')# Obtenemos datos completos de los items recomendados
         item_objects = []
-        for item_data in recommended_items_data:
-            
-            # --- MODIFICACIÓN CLAVE AQUÍ ---
-            # 3.1. Definir las columnas a excluir del diccionario de atributos del ítem.
-            # item_id y name son los campos base del modelo Item.
+        for item_data in recommended_items_data:# Mapeo los datos
             exclude_keys = ['item_id', 'name'] 
-            
-            # 3.2. Construir el diccionario de atributos (price, category, etc.)
             item_attributes = {
                 key: value 
                 for key, value in item_data.items() 
                 if key not in exclude_keys
-            }
-            # -------------------------------
-            
+            } 
             item_objects.append(Item(
                 id=item_data['item_id'],
                 name=item_data['name'],
-                attributes=item_attributes  # AHORA INCLUYE LOS ATRIBUTOS
+                attributes=item_attributes
             ))
-            
-        return ItemArray(items=item_objects)
-
-    except Exception as e:
+        return ItemArray(items=item_objects)# Retornamos los items recomendados
+    except Exception as e:# Manejo de errores generales
         print(f"Error interno en recomendación para el usuario {userId}: {e}")
         raise HTTPException(
             status_code=500, 

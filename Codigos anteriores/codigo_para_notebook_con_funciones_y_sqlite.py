@@ -197,6 +197,7 @@ user_similarity.columns = user_similarity.columns.astype(str)
 # GENERAMOS RECOMENDACIONES
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-user="1" # ID del usuario a recomendar (como string)
-max_recommendations=20
+user=input("Ingrese el ID del usuario para recomendar: ")
+ # ID del usuario a recomendar (como string)
+max_recommendations=int(input("Ingrese el número máximo de recomendaciones: "))
 print(items_recommendations(user, max_recommendations, matrix_norm, user_similarity, df))

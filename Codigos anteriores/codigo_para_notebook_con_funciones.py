@@ -1,8 +1,5 @@
 
 #Importamos las librerias necesarias
-import numpy as np
-import pandas as pd
-import seaborn as sns
 import polars as pl
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -162,7 +159,7 @@ user_similarity = pl.from_numpy(
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # GENERAMOS RECOMENDACIONES PARA UN USUARIO ESPECÍFICO BASADO EN USUARIOS SIMILARES EN EL CASO DE QUE NO HAYA PREFENCIAS REGRISTRAAS DEL USUARIO POR SER NUEVO RECOMENAMOS LOS ITEMS MÁS POPULARES
-user="1"
-max_recommendations=20
+user=input("Ingrese el ID del usuario para el cual desea obtener recomendaciones: ")
+max_recommendations=int(input("Ingrese el número máximo de recomendaciones que desea obtener: "))
 print(items_recommendations(user, max_recommendations, matrix_norm, user_similarity, df))
 
