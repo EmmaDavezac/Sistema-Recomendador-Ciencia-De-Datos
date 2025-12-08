@@ -5,6 +5,7 @@ import pandas as pd
 import seaborn as sns
 import polars as pl
 from sklearn.metrics.pairwise import cosine_similarity
+
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # FUNCIONES PARA GENERAR RECOMENDACIONES
 def user_has_preferences(user_id: str, user_item_matrix: pl.DataFrame) -> bool:

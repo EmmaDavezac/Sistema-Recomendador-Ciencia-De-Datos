@@ -1,4 +1,4 @@
-user_id,email,telephone,birthdate,gender,created_at
+user_id,username,telephone,birthdate,gender,created_at
 1,jgonzalez01@mail.com,11-4501-1001,5/15/1985,F,1/10/2024
 2,mrodriguez02@mail.com,11-4501-1002,11/20/1992,M,1/10/2024
 3,pperez03@mail.com,11-4501-1003,3/1/2000,X,1/10/2024
