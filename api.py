@@ -10,21 +10,27 @@ from typing import List, Dict, Any, Optional
 # --- VARIABLES DE CONFIGURACIÓN ---
 DB_NAME = 'recommendation_system.db'
 # URLs originales de tus datos
-USERS_URL = 'https://raw.githubusercontent.com/EmmaDavezac/Sistema-Recomendador-Ciencia-De-Datos/refs/heads/main/Datasets/Users.csv'
-ITEMS_URL = 'https://raw.githubusercontent.com/EmmaDavezac/Sistema-Recomendador-Ciencia-De-Datos/refs/heads/main/Datasets/Items.csv'
-PREFERENCES_URL = 'https://raw.githubusercontent.com/EmmaDavezac/Sistema-Recomendador-Ciencia-De-Datos/refs/heads/main/Datasets/Preferences.csv'
+USERS_URL = './Datasets/Users.csv'
+ITEMS_URL = './Datasets/Items.csv'
+PREFERENCES_URL = './Datasets/Preferences.csv'
 
 # --- 1. MODELOS PYDANTIC (Para la estructura de la API) ---
 
 class UserAttributes(BaseModel):
-    # Permite que Pydantic acepte cualquier campo en 'attributes'
+    # Definimos los atributos que esperamos del CSV/DB
+    telephone: Optional[str] = None
+    birthdate: Optional[str] = None
+    gender: Optional[str] = None
+    created_at: Optional[str] = None
+    
+    # Esto permite que Pydantic acepte cualquier campo extra en 'attributes' si es necesario
     class Config:
-        extra = "allow"
+        extra = "allow" 
 
 class User(BaseModel):
     id: int
     username: str
-    attributes: UserAttributes = {}
+    attributes: UserAttributes = UserAttributes() # Inicializamos con el modelo de atributos
 
 class ItemAttributes(BaseModel):
     class Config:
@@ -239,8 +245,8 @@ def create_user(user: User):
 # Endpoint: /user/{userId} (GET)
 @app.get("/user/{userId}", response_model=User, tags=["Sistema recomendador"])
 def get_user(userId: int):
-    """Obtener los datos del usuario."""
-    # Buscar el usuario en el DataFrame global USERS_DF
+    """Obtener los datos del usuario, incluyendo atributos detallados."""
+    
     if 'id' not in USERS_DF.columns:
         raise HTTPException(status_code=500, detail={"code": "DATA_ERROR", "message": "Users DataFrame no contiene la columna 'id'."})
 
@@ -251,11 +257,23 @@ def get_user(userId: int):
 
     user_record = user_data.iloc[0].to_dict()
     
-    # Mapeo a Pydantic
+    # 1. Definir las columnas a excluir del diccionario de atributos
+    # user_id es el nombre real de la columna en la BD si el CSV usó 'user_id'
+    # 'id' es el nombre que le dimos al renombrar
+    exclude_keys = ['id', 'username', 'user_id'] 
+    
+    # 2. Construir el diccionario de atributos
+    user_attributes = {
+        key: value 
+        for key, value in user_record.items() 
+        if key not in exclude_keys
+    }
+    
+    # 3. Mapeo a Pydantic
     return User(
         id=user_record['id'],
         username=user_record.get('username', f"user_{userId}"),
-        attributes={} 
+        attributes=user_attributes 
     )
 
 # Endpoint: /user/{userId}/recommend (GET)
@@ -275,15 +293,29 @@ def recommend_items(
         recommended_item_names = get_recommendations_logic(userId, n)
 
         # 3. Convertir los nombres recomendados a objetos Item
-        # Usamos ITEMS_DF que contiene item_id y name
+        # Filtrar ITEMS_DF por los nombres de ítems recomendados
         recommended_items_data = ITEMS_DF[ITEMS_DF['name'].isin(recommended_item_names)].to_dict('records')
         
         item_objects = []
         for item_data in recommended_items_data:
+            
+            # --- MODIFICACIÓN CLAVE AQUÍ ---
+            # 3.1. Definir las columnas a excluir del diccionario de atributos del ítem.
+            # item_id y name son los campos base del modelo Item.
+            exclude_keys = ['item_id', 'name'] 
+            
+            # 3.2. Construir el diccionario de atributos (price, category, etc.)
+            item_attributes = {
+                key: value 
+                for key, value in item_data.items() 
+                if key not in exclude_keys
+            }
+            # -------------------------------
+            
             item_objects.append(Item(
                 id=item_data['item_id'],
                 name=item_data['name'],
-                attributes={} 
+                attributes=item_attributes  # AHORA INCLUYE LOS ATRIBUTOS
             ))
             
         return ItemArray(items=item_objects)
