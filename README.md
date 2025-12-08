@@ -2,7 +2,6 @@
 
 ## Descripción del Sistema
 Este proyecto implementa un Sistema Recomendador Colaborativo basado en la similitud entre usuarios. 
-El objetivo de negocio es desarrollar una API REST funcional capaz de sugerir ítems de interés a los usuarios de una plataforma de venta virtual, reemplazando el actual sistema de visualización aleatoria.
 El sistema fue diseñado bajo la metodología CRISP-DM  y se adhiere a la especificación de endpoints proporcionada por el comitente (especificado en *trabajoFinal.yaml*).
 
 ### Herramientas utilizadas
