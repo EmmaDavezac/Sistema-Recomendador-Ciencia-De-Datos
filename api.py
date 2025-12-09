@@ -7,8 +7,8 @@ import sqlite3 #Librería para manejar bases de datos SQLite
 import os #Librería para operaciones del sistema operativo
 import json #Librería para manejo de JSON
 from fastapi import FastAPI, HTTPException, Query #Librería para crear APIs
-from pydantic import BaseModel,ConfigDict # Librería para validación de datos y creación de modelos
-from typing import List, Optional # Tipos de datos para anotaciones
+from pydantic import BaseModel,ConfigDict,Field # Librería para validación de datos y creación de modelos
+from typing import List, Optional,Annotated # Tipos de datos para anotaciones
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # --- VARIABLES DE CONFIGURACIÓN ---
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -44,13 +44,25 @@ class Item(BaseModel):# Modelo para el item
 class ItemArray(BaseModel):# Modelo para una lista de items
     items: List[Item]
 
+class Preference(BaseModel): # Modelo para una preferencia (calificación)
+    user_id: int
+    item_id: int
+    preference_value: Annotated[
+        int, 
+        Field(
+            ge=1, # Greater than or equal to 1
+            le=5, # Less than or equal to 5
+            description="El valor de la preferencia debe ser un entero entre 1 y 5."
+        )
+    ]
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # --- LÓGICA DE DATOS Y PRE-PROCESAMIENTO ---
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 def inicializar_db():
     """
     Crea y puebla la base de datos SOLO si el archivo DB no existe.
-    Establece 'id' como CLAVE PRIMARIA explícita en la tabla 'users'.
+    Establece las claves primarias (compuestas) y foráneas.
     """
     
     if os.path.exists(DB_NAME):
@@ -60,13 +72,12 @@ def inicializar_db():
     print(f"🔄 Base de datos '{DB_NAME}' no encontrada. Inicializando y cargando CSV...")
     
     try:
-        # Cargar datos desde las URLs locales (Solo se ejecuta si la DB NO existe)
+        # Cargar datos desde las URLs locales
         users_df = pd.read_csv(USERS_URL)
         items_df = pd.read_csv(ITEMS_URL)
         preferences_df = pd.read_csv(PREFERENCES_URL)
         
-        # --- PRE-PROCESAMIENTO CLAVE PARA CONSOLIDAR ATTRIBUTES ---
-        
+        # --- PRE-PROCESAMIENTO USERS (Mantenido) ---
         if 'id' not in users_df.columns:
             id_cols = [col for col in users_df.columns if 'id' in col.lower()]
             if id_cols:
@@ -81,35 +92,93 @@ def inicializar_db():
             }
             return json.dumps(attributes)
 
-        users_df['attributes_json'] = users_df.apply(serialize_attributes, axis=1)
+        users_df['attributes'] = users_df.apply(serialize_attributes, axis=1)
+        users_df_clean = users_df[BASE_KEYS + ['attributes']].copy()
+        # --- FIN PRE-PROCESAMIENTO USERS ---
         
-        # Mantenemos todas las columnas base necesarias (id, username, attributes_json)
-        users_df_clean = users_df[BASE_KEYS + ['attributes_json']].copy()# Nos aseguramos de tener solo las columnas necesarias
-        # --- FIN PRE-PROCESAMIENTO ---
-    
-        conn = sqlite3.connect(DB_NAME)# Abrimos la conexión a la base de datos
+        
+        #  Mapeo y Filtrado de PREFERENCES (Necesario para el CSV)
+        preferences_df.rename(columns={
+            'user_id': 'user_id',
+            'item_id': 'item_id',
+            'preference_value': 'preference_value'
+        }, inplace=True)
+        
+        # Filtrar solo las 3 columnas del esquema SQL
+        preferences_df = preferences_df[['user_id', 'item_id', 'preference_value']].copy()
+        
+        # Aseguramos que ITEMS tenga 'item_id'
+        # Asumiendo que el CSV de Items usa 'item_id'
+        if 'id' in items_df.columns and 'item_id' not in items_df.columns:
+            items_df.rename(columns={'id': 'item_id'}, inplace=True)
+            
+        # ----------------------------------------------------------------------
+        
+        conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
-         # Creamos la tabla de usuarios con 'id' como PRIMARY KEY
+        
+        # 1. Crear tabla de usuarios con PRIMARY KEY
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY,
                 username TEXT,
-                attributes_json TEXT
+                attributes TEXT
             );
         """)
-        # Usamos if_exists='append' porque la tabla ya fue creada con el esquema correcto.
-        # Desactivamos el índice de Pandas (index=False) porque 'id' ya está como columna.
-        users_df_clean.to_sql('users', conn, if_exists='append', index=False)# Insertamos los usuarios en la base de datos
-        items_df.to_sql('items', conn, if_exists='replace', index=False)# Insertamos los items en la base de datos
-        preferences_df.to_sql('preferences', conn, if_exists='replace', index=False)# Insertamos las preferencias en la base de datos
-        conn.commit()# Guardamos los cambios
-        conn.close()# Cerramos la conexión a la base de datos
-        print(" Base de datos SQLite creada y cargada con éxito.")
+        
+        # 2. Crear tabla de items con PRIMARY KEY
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS items (
+                item_id INTEGER PRIMARY KEY,
+                name TEXT,
+                price REAL,
+                category TEXT
+            );
+        """)
+        
+        # 3. Crear tabla de preferencias con CLAVE COMPUESTA y FOREIGN KEYS
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS preferences (
+                user_id INTEGER,
+                item_id INTEGER,
+                preference_value REAL,
+                PRIMARY KEY (user_id, item_id),
+                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY(item_id) REFERENCES items(item_id) ON DELETE CASCADE
+            );
+        """)
+        
+        # --- BLOQUE DE INSERCIÓN CORREGIDO ---
+        
+        #  Deshabilitar la verificación de FK temporalmente (solo para carga inicial)
+        conn.execute("PRAGMA foreign_keys = OFF;") 
+
+        # Insertar datos
+        # IMPORTANTE: El orden de inserción es CRÍTICO para FKs
+        
+        users_df_clean.to_sql('users', conn, if_exists='append', index=False)
+        items_df.to_sql('items', conn, if_exists='append', index=False) 
+        preferences_df.to_sql('preferences', conn, if_exists='append', index=False)
+        
+        # Re-habilitar la verificación de FK
+        conn.execute("PRAGMA foreign_keys = ON;")
+        
+        # Verificar si la tabla de items tiene datos (CRÍTICO para la tabla preferences)
+        item_count = cursor.execute("SELECT COUNT(*) FROM items").fetchone()[0]
+        pref_count = cursor.execute("SELECT COUNT(*) FROM preferences").fetchone()[0]
+        
+        if item_count == 0:
+            print("⚠️ ADVERTENCIA: La tabla 'items' está vacía. Esto causará que la tabla 'preferences' esté vacía.")
             
-    except Exception as e: # Manejo de errores generales
+        conn.commit()
+        conn.close()
+        
+        print(f" Base de datos SQLite creada y cargada con éxito. Items cargados: {item_count}. Preferencias cargadas: {pref_count}.")
+            
+    except Exception as e:
         print(f" Error al inicializar SQLite: {e}")
         raise
-
+    
 def cargar_y_procesamiento_inicial():
     """Carga los datos de SQLite (una vez que la DB existe) y genera las matrices necesarias para el sistema recomendador.
     Returns:
@@ -133,13 +202,13 @@ ON
     
     conn = sqlite3.connect(DB_NAME)# Abrimos la conexión a la base de datos
     df = pd.read_sql_query(SQL_QUERY, conn)# Leemos las preferencias uniendo items y preferences
-    users_df = pd.read_sql_query("SELECT id, username, attributes_json FROM users", conn)# Leemos los usuarios desde la base de datos
+    users_df = pd.read_sql_query("SELECT id, username, attributes FROM users", conn)# Leemos los usuarios desde la base de datos
     items_df = pd.read_sql_query("SELECT * FROM items", conn)# Leemos los items desde la base de datos
     conn.close()# Cerramos la conexión a la base de datos
 
     
-    if 'attributes_json' in users_df.columns:# Deserialización de los atributos del usuario
-        users_df['attributes_json'] = users_df['attributes_json'].apply(
+    if 'attributes' in users_df.columns:# Deserialización de los atributos del usuario
+        users_df['attributes'] = users_df['attributes'].apply(
             lambda x: json.loads(x) if pd.notna(x) and isinstance(x, str) else {}
         )
 
@@ -262,9 +331,9 @@ def create_user(user: User):
             cursor = conn.cursor()
             user_data = user.model_dump(exclude_defaults=True)
             attributes_to_save = user_data.get('attributes', {})
-            attributes_json = json.dumps(attributes_to_save)
-            insert_query = "INSERT INTO users (id, username, attributes_json) VALUES (?, ?, ?);"
-            cursor.execute(insert_query, (user_data['id'], user_data['username'], attributes_json))# Insertamos el usuario en la base de datos
+            attributes = json.dumps(attributes_to_save)
+            insert_query = "INSERT INTO users (id, username, attributes) VALUES (?, ?, ?);"
+            cursor.execute(insert_query, (user_data['id'], user_data['username'], attributes))# Insertamos el usuario en la base de datos
         return user# Retornamos el usuario creado
     except sqlite3.IntegrityError as e: # Manejo de clave primaria duplicada
         raise HTTPException(
@@ -288,17 +357,17 @@ def get_user(userId: int):
     """
     conn = sqlite3.connect(DB_NAME)# Abrimos la conexión a la base de datos 
     # Leemos el registro desde la base de datos
-    query = "SELECT id, username, attributes_json FROM users WHERE id = ?"
+    query = "SELECT id, username, attributes FROM users WHERE id = ?"
     user_data = pd.read_sql_query(query, conn, params=(userId,))
     conn.close()# Cerramos la conexión
     if user_data.empty:# Usuario no encontrado
         raise HTTPException(status_code=404, detail={"code": "USER_NOT_FOUND", "message": f"User {userId} not found"})
     user_record = user_data.iloc[0].to_dict()
     # Deserialización de JSON
-    attributes_json_str = user_record.get('attributes_json')
-    if pd.notna(attributes_json_str) and isinstance(attributes_json_str, str):
+    attributes_str = user_record.get('attributes')
+    if pd.notna(attributes_str) and isinstance(attributes_str, str):
         try:
-            user_attributes = json.loads(attributes_json_str)
+            user_attributes = json.loads(attributes_str)
         except json.JSONDecodeError:
             user_attributes = {} # Error de JSON, retornamos vacío
     else:
@@ -323,7 +392,7 @@ def recommend_items(userId: int, n: int = Query(5, description="numero de items 
     """
     conn = sqlite3.connect(DB_NAME)# Abrimos la conexión a la base de datos
     # Leer el registro directamente desde la base de datos
-    query = "SELECT id, username, attributes_json FROM users WHERE id = ?"
+    query = "SELECT id, username, attributes FROM users WHERE id = ?"
     user_data = pd.read_sql_query(query, conn, params=(userId,))
     conn.close()# Cerramos la conexión a la base de datos
     if user_data.empty:# Usuario no encontrado
@@ -351,3 +420,91 @@ def recommend_items(userId: int, n: int = Query(5, description="numero de items 
             status_code=500, 
             detail={"code": "INTERNAL_ERROR", "message": f"Error al generar recomendaciones: {e}"}
         )
+    
+    # Endpoint: /preference (POST)
+
+@app.post("/preference", tags=["Sistema recomendador"])
+def create_preference(preference: Preference):
+    """
+    Registrar una nueva preferencia (calificación) de un usuario sobre un ítem.
+    Si la preferencia ya existe (user_id, item_id), se actualiza.
+    
+    Args:
+        preference (Preference): Datos de la preferencia a registrar/actualizar.
+    Returns:
+        dict: Mensaje de éxito.
+    """
+    try:
+        # 1. Verificar si el usuario y el ítem existen antes de insertar/actualizar
+        conn = sqlite3.connect(DB_NAME)
+        
+        # Verificar usuario
+        user_check = conn.execute("SELECT 1 FROM users WHERE id = ?", (preference.user_id,)).fetchone()
+        if user_check is None:
+            conn.close()
+            raise HTTPException(status_code=404, detail={"code": "USER_NOT_FOUND", "message": f"User ID {preference.user_id} not found"})
+
+        # Verificar ítem
+        item_check = conn.execute("SELECT 1 FROM items WHERE item_id = ?", (preference.item_id,)).fetchone()
+        if item_check is None:
+            conn.close()
+            raise HTTPException(status_code=404, detail={"code": "ITEM_NOT_FOUND", "message": f"Item ID {preference.item_id} not found"})
+        
+        # 2. Insertar o reemplazar la preferencia (UPSERT)
+        insert_query = """
+        INSERT INTO preferences (user_id, item_id, preference_value) 
+        VALUES (?, ?, ?) 
+        ON CONFLICT(user_id, item_id) DO UPDATE SET 
+            preference_value = excluded.preference_value;
+        """
+        # Nota: La tabla 'preferences' debe tener un índice/clave única sobre (user_id, item_id)
+        # para que ON CONFLICT funcione correctamente en SQLite.
+
+        conn.execute(insert_query, (preference.user_id, preference.item_id, preference.preference_value))
+        conn.commit()
+        conn.close()
+
+        # En un sistema real, aquí deberías RECALCULAR las matrices de similitud (MATRIX_NORM, USER_SIMILARITY).
+        # Para mantener el ejemplo simple, asumimos que el recálculo se hace de forma asíncrona o periódica.
+        
+        return {"code": "SUCCESS", "message": "Preferencia registrada/actualizada con éxito"}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail={"code": "DB_ERROR", "message": f"Error al registrar preferencia: {e}"}
+        )
+
+# Endpoint: /preference/{userId}/{itemId} (GET)
+@app.get("/preference/{userId}/{itemId}", response_model=Preference, tags=["Sistema recomendador"])
+def get_preference(userId: int, itemId: int):
+    """
+    Obtener la preferencia (calificación) de un usuario sobre un ítem específico.
+    
+    Args:
+        userId (int): ID del usuario.
+        itemId (int): ID del ítem.
+    Returns:
+        Preference: Datos de la preferencia.
+    """
+    conn = sqlite3.connect(DB_NAME)
+    query = "SELECT user_id, item_id, preference_value FROM preferences WHERE user_id = ? AND item_id = ?"
+    
+    # Se usa pd.read_sql_query para simplificar la lectura
+    preference_data = pd.read_sql_query(query, conn, params=(userId, itemId))
+    conn.close()
+    
+    if preference_data.empty:
+        raise HTTPException(status_code=404, detail={"code": "PREFERENCE_NOT_FOUND", "message": f"Preference not found for User {userId} on Item {itemId}"})
+
+    # Mapear el resultado de Pandas al modelo Pydantic
+    record = preference_data.iloc[0].to_dict()
+    return Preference(
+        user_id=record['user_id'],
+        item_id=record['item_id'],
+        preference_value=record['preference_value']
+    )
+
+
