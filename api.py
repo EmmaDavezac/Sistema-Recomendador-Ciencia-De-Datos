@@ -17,7 +17,7 @@ USERS_URL = './Datasets/Users.csv'# Ruta local del archivo CSV de usuarios
 ITEMS_URL = './Datasets/Items.csv'# Ruta local del archivo CSV de items
 PREFERENCES_URL = './Datasets/Preferences.csv'# Ruta local del archivo CSV de preferencias
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# --- MODELOS PYDANTIC
+# --- MODELOS DE DATOS PARA LA API ---
 #ESTOS MODELOS SE USAN PARA VALIDAR Y ESTRUCTURAR LOS DATOS DE ENTRADA Y SALIDA DE LA API
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class UserAttributes(BaseModel):# Modelo para los atributos del usuario
@@ -59,52 +59,45 @@ class Preference(BaseModel): # Modelo para una preferencia (calificación)
 # --- LÓGICA DE DATOS Y PRE-PROCESAMIENTO ---
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-def inicializar_db():
+def initialize_db():
     """
     Crea y puebla la base de datos SOLO si el archivo DB no existe.
     Establece las claves primarias (compuestas) y foráneas.
     """
-    
-    if os.path.exists(DB_NAME):
-        print(f" Base de datos '{DB_NAME}' ya existe. Saltando importacion desde CSV.")
-        return
-        
-    print(f"🔄 Base de datos '{DB_NAME}' no encontrada. Inicializando y cargando CSV...")
-    
     try:
-        # Cargar datos desde las URLs locales
+        # Cargamos los datos desde los CSV
         users_df = pd.read_csv(USERS_URL)
         items_df = pd.read_csv(ITEMS_URL)
         preferences_df = pd.read_csv(PREFERENCES_URL)
         
-        # --- PRE-PROCESAMIENTO USERS (Mantenido) ---
-        if 'id' not in users_df.columns:
+        # Preprocesamos los atributos de USERS para serializarlos a JSON
+        if 'id' not in users_df.columns: 
             id_cols = [col for col in users_df.columns if 'id' in col.lower()]
             if id_cols:
-                 users_df = users_df.rename(columns={id_cols[0]: 'id'})
-
-        BASE_KEYS = ['id', 'username']
+                users_df = users_df.rename(columns={id_cols[0]: 'id'})
         
+        BASE_KEYS = ['id', 'username']
+        # Función para serializar atributos adicionales a JSON
         def serialize_attributes(row):
             attributes = {
                 k: v for k, v in row.items() 
                 if k not in BASE_KEYS and pd.notna(v)
             }
-            return json.dumps(attributes)
-
-        users_df['attributes'] = users_df.apply(serialize_attributes, axis=1)
-        users_df_clean = users_df[BASE_KEYS + ['attributes']].copy()
-        # --- FIN PRE-PROCESAMIENTO USERS ---
+            return json.dumps(attributes)# Serializamos a JSON
+        #
         
+        users_df['attributes'] = users_df.apply(serialize_attributes, axis=1)# Creamos la columna 'attributes' con JSON
+        users_df_clean = users_df[BASE_KEYS + ['attributes']].copy()# Filtramos solo las columnas necesarias        
         
-        #  Mapeo y Filtrado de PREFERENCES (Necesario para el CSV)
+        # Mapeo y Filtrado de PREFERENCES 
+        # Aseguramos que las columnas tengan los nombres correctos
         preferences_df.rename(columns={
             'user_id': 'user_id',
             'item_id': 'item_id',
             'preference_value': 'preference_value'
         }, inplace=True)
         
-        # Filtrar solo las 3 columnas del esquema SQL
+        # Filtramos solo las columnas necesarias 
         preferences_df = preferences_df[['user_id', 'item_id', 'preference_value']].copy()
         
         # Aseguramos que ITEMS tenga 'item_id'
@@ -112,12 +105,13 @@ def inicializar_db():
         if 'id' in items_df.columns and 'item_id' not in items_df.columns:
             items_df.rename(columns={'id': 'item_id'}, inplace=True)
             
-        # ----------------------------------------------------------------------
+        # ------------------------------------------------------------------------------------------------
+        # Creación de la base de datos SQLite y tablas con claves primarias y foráneas
+        # ------------------------------------------------------------------------------------------------
+        conn = sqlite3.connect(DB_NAME)# Conexión a la base de datos SQLite
+        cursor = conn.cursor()# Cursor para ejecutar comandos SQL
         
-        conn = sqlite3.connect(DB_NAME)
-        cursor = conn.cursor()
-        
-        # 1. Crear tabla de usuarios con PRIMARY KEY
+       #Creamos tabla de usuarios con id como PRIMARY KEY y username único
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY,
@@ -126,7 +120,7 @@ def inicializar_db():
             );
         """)
         
-        # 2. Crear tabla de items con PRIMARY KEY
+        # Creamos la tabla de items con item_id como PRIMARY KEY
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS items (
                 item_id INTEGER PRIMARY KEY,
@@ -136,7 +130,7 @@ def inicializar_db():
             );
         """)
         
-        # 3. Crear tabla de preferencias con CLAVE COMPUESTA y FOREIGN KEYS
+        #Creamos la tabla de preferencias con claves foráneas a las tablas users e items y clave primaria compuesta
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS preferences (
                 user_id INTEGER,
@@ -148,43 +142,33 @@ def inicializar_db():
             );
         """)
         
-        # --- BLOQUE DE INSERCIÓN CORREGIDO ---
-        
-        #  Deshabilitar la verificación de FK temporalmente (solo para carga inicial)
+        #  Deshabilitamos la verificación de FK temporalmente (solo para carga inicial) para evitar errores de inserción
         conn.execute("PRAGMA foreign_keys = OFF;") 
 
-        # Insertar datos
-        # IMPORTANTE: El orden de inserción es CRÍTICO para FKs
-        
+        # Insertamos los datos en las tablas correspondientes
         users_df_clean.to_sql('users', conn, if_exists='append', index=False)
         items_df.to_sql('items', conn, if_exists='append', index=False) 
         preferences_df.to_sql('preferences', conn, if_exists='append', index=False)
         
-        # Re-habilitar la verificación de FK
+        # Volvemos a habilitar la verificación de claves foráneas
         conn.execute("PRAGMA foreign_keys = ON;")
         
-        # Verificar si la tabla de items tiene datos (CRÍTICO para la tabla preferences)
-        item_count = cursor.execute("SELECT COUNT(*) FROM items").fetchone()[0]
-        pref_count = cursor.execute("SELECT COUNT(*) FROM preferences").fetchone()[0]
+        conn.commit()# Guardamos los cambios
+        conn.close()# Cerramos la conexión
         
-        if item_count == 0:
-            print("⚠️ ADVERTENCIA: La tabla 'items' está vacía. Esto causará que la tabla 'preferences' esté vacía.")
-            
-        conn.commit()
-        conn.close()
-        
-        print(f" Base de datos SQLite creada y cargada con éxito. Items cargados: {item_count}. Preferencias cargadas: {pref_count}.")
+        print(f" Base de datos SQLite creada y cargada con éxito.")
             
     except Exception as e:
         print(f" Error al inicializar SQLite: {e}")
         raise
 
-def cargar_y_procesamiento_inicial():
-    """Carga los datos de SQLite (una vez que la DB existe) y genera las matrices necesarias para el sistema recomendador.
+def initial_load():
+    """Carga los datos de SQLite (una vez que la DB existe y si no, la crea) y genera las matrices necesarias para el sistema recomendador.
     Returns:
         tuple: (df, matrix_norm, user_similarity, users_df, items_df)"""
-    
-    inicializar_db() #Inicializa la DB si no existe
+    if not(os.path.exists(DB_NAME)): # Verificamos si la base de datos ya existe
+        print(f"Base de datos '{DB_NAME}' no encontrada. Creandola e inicializándola...")
+        initialize_db() #Inicializa la DB si no existe
     
     SQL_QUERY = """
 SELECT 
@@ -239,7 +223,7 @@ ON
 # --- Carga y precálculo de datos al inicio del servidor ---
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 try:
-    DF, MATRIX_NORM, USER_SIMILARITY, USERS_DF, ITEMS_DF = cargar_y_procesamiento_inicial()#
+    DF, MATRIX_NORM, USER_SIMILARITY, USERS_DF, ITEMS_DF = initial_load()#
 except Exception as e:# Manejo de errores en la carga inicial
     print(f" ERROR FATAL: La aplicación no pudo iniciar debido al error de carga/procesamiento: {e}")
 
@@ -435,30 +419,28 @@ def create_preference(preference: Preference):
         dict: Mensaje de éxito.
     """
     try:
-        # 1. Verificar si el usuario y el ítem existen antes de insertar/actualizar
+        # Verificamos si el usuario y el ítem existen antes de insertar/actualizar
         conn = sqlite3.connect(DB_NAME)
         
-        # Verificar usuario
+        # Verificamos el usuario
         user_check = conn.execute("SELECT 1 FROM users WHERE id = ?", (preference.user_id,)).fetchone()
         if user_check is None:
             conn.close()
             raise HTTPException(status_code=404, detail={"code": "USER_NOT_FOUND", "message": f"User ID {preference.user_id} not found"})
 
-        # Verificar ítem
+        # Verificamos el ítem
         item_check = conn.execute("SELECT 1 FROM items WHERE item_id = ?", (preference.item_id,)).fetchone()
         if item_check is None:
             conn.close()
             raise HTTPException(status_code=404, detail={"code": "ITEM_NOT_FOUND", "message": f"Item ID {preference.item_id} not found"})
         
-        # 2. Insertar o reemplazar la preferencia (UPSERT)
+        # Insertamos la preferencia del usuario sobre el ítem, o actualizamos si ya existe
         insert_query = """
         INSERT INTO preferences (user_id, item_id, preference_value) 
         VALUES (?, ?, ?) 
         ON CONFLICT(user_id, item_id) DO UPDATE SET 
             preference_value = excluded.preference_value;
         """
-        # Nota: La tabla 'preferences' debe tener un índice/clave única sobre (user_id, item_id)
-        # para que ON CONFLICT funcione correctamente en SQLite.
 
         conn.execute(insert_query, (preference.user_id, preference.item_id, preference.preference_value))
         conn.commit()
@@ -467,11 +449,11 @@ def create_preference(preference: Preference):
         # En un sistema real, aquí deberías RECALCULAR las matrices de similitud (MATRIX_NORM, USER_SIMILARITY).
         # Para mantener el ejemplo simple, asumimos que el recálculo se hace de forma asíncrona o periódica.
         
-        return {"code": "SUCCESS", "message": "Preferencia registrada/actualizada con éxito"}
+        return {"code": "SUCCESS", "message": "Preferencia registrada/actualizada con éxito"}# Retornamos mensaje de éxito
     
-    except HTTPException:
-        raise
-    except Exception as e:
+   # except HTTPException:
+   #    raise
+    except Exception as e:# Manejo general de errores
         raise HTTPException(
             status_code=500, 
             detail={"code": "DB_ERROR", "message": f"Error al registrar preferencia: {e}"}
