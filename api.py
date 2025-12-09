@@ -121,7 +121,7 @@ def inicializar_db():
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY,
-                username TEXT,
+                username TEXT UNIQUE,
                 attributes TEXT
             );
         """)
@@ -178,7 +178,7 @@ def inicializar_db():
     except Exception as e:
         print(f" Error al inicializar SQLite: {e}")
         raise
-    
+
 def cargar_y_procesamiento_inicial():
     """Carga los datos de SQLite (una vez que la DB existe) y genera las matrices necesarias para el sistema recomendador.
     Returns:
