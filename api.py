@@ -8,7 +8,7 @@ import os #Librería para operaciones del sistema operativo
 import json #Librería para manejo de JSON
 from fastapi import FastAPI, HTTPException, Query #Librería para crear APIs
 from pydantic import BaseModel,ConfigDict,Field # Librería para validación de datos y creación de modelos
-from typing import List, Optional,Annotated # Tipos de datos para anotaciones
+from typing import List,Annotated # Tipos de datos para anotaciones
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # --- VARIABLES DE CONFIGURACIÓN ---
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -29,10 +29,7 @@ class User(BaseModel):# Modelo para el usuario
     username: str
     attributes: UserAttributes = UserAttributes()
 
-class ItemAttributes(BaseModel):# Modelo para los atributos del item
-    price: Optional[float] = None
-    category: Optional[str] = None
-    
+class ItemAttributes(BaseModel):# Modelo para los atributos del item 
     class Config:
         extra = "allow"
 
@@ -50,8 +47,8 @@ class Preference(BaseModel): # Modelo para una preferencia (calificación)
     preference_value: Annotated[
         int, 
         Field(
-            ge=1, # Greater than or equal to 1
-            le=5, # Less than or equal to 5
+            ge=1, # Mayor o igual a 1
+            le=5, # Menor o igual a 5
             description="El valor de la preferencia debe ser un entero entre 1 y 5."
         )
     ]
@@ -70,7 +67,7 @@ def initialize_db():
         items_df = pd.read_csv(ITEMS_URL)
         preferences_df = pd.read_csv(PREFERENCES_URL)
         
-        # Preprocesamos los atributos de USERS para serializarlos a JSON
+        # Preprocesamos los atributos de USERS
         if 'id' not in users_df.columns: 
             id_cols = [col for col in users_df.columns if 'id' in col.lower()]
             if id_cols:
@@ -84,11 +81,26 @@ def initialize_db():
                 if k not in BASE_KEYS and pd.notna(v)
             }
             return json.dumps(attributes)# Serializamos a JSON
-        #
+        
         
         users_df['attributes'] = users_df.apply(serialize_attributes, axis=1)# Creamos la columna 'attributes' con JSON
         users_df_clean = users_df[BASE_KEYS + ['attributes']].copy()# Filtramos solo las columnas necesarias        
         
+        # Preprocesamiento de ITEMS 
+        if 'id' in items_df.columns and 'item_id' not in items_df.columns:
+            items_df.rename(columns={'id': 'item_id'}, inplace=True)
+            
+        BASE_ITEM_KEYS = ['item_id', 'name']
+        def serialize_item_attributes(row):
+            attributes = {
+                k: v for k, v in row.items() 
+                if k not in BASE_ITEM_KEYS and pd.notna(v)
+            }
+            return json.dumps(attributes)
+        
+        items_df['attributes'] = items_df.apply(serialize_item_attributes, axis=1)
+        items_df_clean = items_df[BASE_ITEM_KEYS + ['attributes']].copy()
+
         # Mapeo y Filtrado de PREFERENCES 
         # Aseguramos que las columnas tengan los nombres correctos
         preferences_df.rename(columns={
@@ -113,29 +125,28 @@ def initialize_db():
         
        #Creamos tabla de usuarios con id como PRIMARY KEY y username único
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY,
-                username TEXT UNIQUE,
+             CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY NOT NULL,
+                username TEXT UNIQUE NOT NULL,
                 attributes TEXT
             );
         """)
         
         # Creamos la tabla de items con item_id como PRIMARY KEY
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS items (
-                item_id INTEGER PRIMARY KEY,
-                name TEXT,
-                price REAL,
-                category TEXT
-            );
-        """)
+                CREATE TABLE IF NOT EXISTS items (
+                    item_id INTEGER PRIMARY KEY NOT NULL,
+                    name TEXT NOT NULL,
+                    attributes TEXT
+                );
+            """)
         
         #Creamos la tabla de preferencias con claves foráneas a las tablas users e items y clave primaria compuesta
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS preferences (
-                user_id INTEGER,
-                item_id INTEGER,
-                preference_value REAL,
+                user_id INTEGER NOT NULL,
+                item_id INTEGER NOT NULL,
+                preference_value INTEGER NOT NULL,
                 PRIMARY KEY (user_id, item_id),
                 FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
                 FOREIGN KEY(item_id) REFERENCES items(item_id) ON DELETE CASCADE
@@ -147,7 +158,7 @@ def initialize_db():
 
         # Insertamos los datos en las tablas correspondientes
         users_df_clean.to_sql('users', conn, if_exists='append', index=False)
-        items_df.to_sql('items', conn, if_exists='append', index=False) 
+        items_df_clean.to_sql('items', conn, if_exists='append', index=False) 
         preferences_df.to_sql('preferences', conn, if_exists='append', index=False)
         
         # Volvemos a habilitar la verificación de claves foráneas
@@ -170,6 +181,7 @@ def initial_load():
         print(f"Base de datos '{DB_NAME}' no encontrada. Creandola e inicializándola...")
         initialize_db() #Inicializa la DB si no existe
     
+    # Consulta SQL para unir items y preferences
     SQL_QUERY = """
 SELECT 
     T1.item_id,
@@ -190,12 +202,23 @@ ON
     items_df = pd.read_sql_query("SELECT * FROM items", conn)# Leemos los items desde la base de datos
     conn.close()# Cerramos la conexión a la base de datos
 
-    
-    if 'attributes' in users_df.columns:# Deserialización de los atributos del usuario
+    # Deserialización de los atributos del usuario
+    if 'attributes' in users_df.columns:
         users_df['attributes'] = users_df['attributes'].apply(
             lambda x: json.loads(x) if pd.notna(x) and isinstance(x, str) else {}
         )
-
+    # Deserialización de los atributos del item
+    if 'attributes' in items_df.columns:
+        # 1. Deserializar el JSON y convertirlo en una Serie de diccionarios
+        items_df['attributes_dict'] = items_df['attributes'].apply(
+            lambda x: json.loads(x) if pd.notna(x) and isinstance(x, str) else {}
+        )
+        # Expenimos los diccionarios en columnas separadas
+        temp_attr_df = items_df['attributes_dict'].apply(pd.Series)
+        # Concatenamos las columnas expandidas al DataFrame principal y renombrar para evitar colisión
+        # El DataFrame ITEMS_DF final tendrá 'item_id', 'name', 'attributes' (el JSON original), y las columnas expandidas.
+        # Ahora el DF contiene todos los atributos como columnas separadas.
+        items_df = pd.concat([items_df, temp_attr_df], axis=1)
     if 'id' in users_df.columns: #nos aseguramos que el id sea int
         users_df['id'] = users_df['id'].astype(int)
 
@@ -232,7 +255,7 @@ except Exception as e:# Manejo de errores en la carga inicial
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def user_has_preferences(user_id: int) -> bool:
     """Verifica si un usuario tiene preferencias registradas en la matriz normalizada.
-    Args:
+    Args:a
         user_id (int): ID del usuario a verificar.
     Returns:
         bool: True si el usuario tiene preferencias, False en caso contrario."""
@@ -247,7 +270,7 @@ def cold_start_items_recommendations(number_max_of_recommendations: int) -> list
     top_items = DF.groupby('name')['preference_value'].count().sort_values(ascending=False)# Contamos la cantidad de preferencias por item y los ordenamos
     return top_items.head(number_max_of_recommendations).index.tolist()# Retornamos los nombres de los items más populares
 
-def get_recommendations_logic(user_id: int, number_max_of_recommendations: int) -> list:
+def get_recommendations(user_id: int, number_max_of_recommendations: int) -> list:
     """Genera recomendaciones para un usuario específico, ya sea basado en usuarios similares o en los items más populares si el usuario es nuevo.
     Args:
         user_id (int): ID del usuario para el cual se generan recomendaciones.
@@ -382,15 +405,15 @@ def recommend_items(userId: int, n: int = Query(5, description="numero de items 
     if user_data.empty:# Usuario no encontrado
         raise HTTPException(status_code=404, detail={"code": "USER_NOT_FOUND", "message": f"User {userId} not found"}) 
     try:
-        recommended_item_names = get_recommendations_logic(userId, n)# Obtenemos los nombres de items recomendados
+        recommended_item_names = get_recommendations(userId, n)# Obtenemos los nombres de items recomendados
         recommended_items_data = ITEMS_DF[ITEMS_DF['name'].isin(recommended_item_names)].to_dict('records')# Obtenemos datos completos de los items recomendados
         item_objects = []
-        for item_data in recommended_items_data:# Mapeo los datos
-            exclude_keys = ['item_id', 'name'] 
+        for item_data in recommended_items_data:
+            exclude_keys = ['item_id', 'name', 'attributes', 'attributes_dict']
             item_attributes = {
                 key: value 
                 for key, value in item_data.items() 
-                if key not in exclude_keys
+                if key not in exclude_keys and pd.notna(value)
             } 
             item_objects.append(Item(
                 id=item_data['item_id'],

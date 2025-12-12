@@ -1,8 +1,6 @@
 # Importamos las librerias necesarias
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 import polars as pl
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -141,6 +139,7 @@ candidate_items_puntuation = matrix_norm.join(
 ).select(
     pl.col(candidate_items)
 )
+print(f"Puntuación de los items candidatos: {candidate_items_puntuation}")
 
 # Recomendaciones ordenadas
 recomendaciones_ordenadas = candidate_items_puntuation.mean().to_pandas(
