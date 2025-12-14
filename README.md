@@ -1,15 +1,20 @@
 # Sistema-Recomendador-Ciencia-De-Datos
+## Introucción
+El presente proyecto representa la resolución del Trabajo Práctico Final correspondiente a la materia Ciencia de Datos de la Universidad Tecnológica Nacional (UTN FRCU).
 
 ## Descripción del Sistema
-Este proyecto implementa un Sistema Recomendador Colaborativo basado en la similitud entre usuarios. 
-El sistema fue diseñado bajo la metodología CRISP-DM  y se adhiere a la especificación de endpoints proporcionada por el comitente (especificado en *trabajoFinal.yaml*).
-
+Este proyecto implementa un Sistema Recomendador de filtro colaborativo basado en similitud entre usuarios. 
+El sistema fue desarrollado bajo la metodología CRISP-DM  e implementado como API REST.
+Este se adhiere a la especificación de endpoints proporcionada por el comitente, pero agrega otros endpoints que se creyeron necesarios.
+## Endpoints de la API
+![Alt text](image.png)
 ### Herramientas utilizadas
 Las herramientas fueron elegidas para que la implementación sea lo mas sencilla posible y tenga buen rendimiento. Las herramientas utilizadas son:
 * **Python**:Utilizamos este lenguaje porque es sencillo, tiene muchas librerias, multiplataforma, tenemos experiencia y es el mismo que utilizamos en Collab.
 * **FastAPI**: Para implementar la API, tambien contemplamos utlizar el framework FLASK, pero elegimos FastAPI por ser mas simple y ligero.
 * **SQLite**: Para implementar la base de datos, porque no necesita un servidor externo para la base de datos, lo que nos simplifica la implementacion.
 * **Pandas**: Para la manipulacion de datos, en versiones iniciales usamos Polars, pero terminamos usar Pandas porque teniamos mas experiencia con esta..
+
 
 ### Consideraciones 
 * Como no se indican explicitamente los productos en la documentacion, creamos 100 productos genericos para la demostracion del sistema. En este caso son libros, pero este programa funciona para cualquier tipo de items siempre que se respete el formato.
@@ -27,9 +32,9 @@ Se utiliza una base de datos local SQLite con las siguientes tablas que luego so
 
 |Tabla      |Clave Principal|Descripción y Atributos                                                                                       |
 ------------|---------------|--------------------------------------------------------------------------------------------------------------|
-|users      |id             | Guarda id, username y todos los atributos adicionales del usuario serializados como JSON en attributes_json. |
-|items      |item_id        | Guarda item_id, name y sus atributos (ej. price, category).                                                  |
-|preferences|(Combinada)    | Guarda la interacción: user_id, item_id y preference_value (valor del rating o interacción).                 |
+|users      |id             | Guarda id, username y todos los atributos adicionales del usuario serializados como JSON en attributes.      |
+|items      |item_id        | Guarda item_id, name y todos los atributos adicionales del usuario en attributes.                            |
+|preferences|(Combinada)    | Guarda la interacción: user_id, item_id y preference_value (valor del rating ).                              |
 
 
 ## Tutorial de Instalación y Ejecución de la API

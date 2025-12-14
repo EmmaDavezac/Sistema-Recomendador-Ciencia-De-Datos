@@ -512,4 +512,89 @@ def get_preference(userId: int, itemId: int):
         preference_value=record['preference_value']
     )
 
+# Endpoint: /item/{itemId} (GET)
+@app.get("/item/{itemId}", response_model=Item, tags=["Sistema recomendador"])
+def get_item(itemId: int):
+    """
+    Obtener los datos de un ítem, incluyendo sus atributos dinámicos.
+    
+    Args:
+        itemId (int): ID del ítem a obtener.
+    Returns:
+        Item: Datos del ítem solicitado.
+    """
+    conn = sqlite3.connect(DB_NAME)
+    # Selecciona el item_id, name, y los atributos en formato JSON
+    query = "SELECT item_id, name, attributes FROM items WHERE item_id = ?"
+    item_data = pd.read_sql_query(query, conn, params=(itemId,))
+    conn.close()
 
+    if item_data.empty:
+        raise HTTPException(status_code=404, detail={"code": "ITEM_NOT_FOUND", "message": f"Item {itemId} not found"})
+
+    item_record = item_data.iloc[0].to_dict()
+    
+    # Deserialización de JSON de atributos
+    attributes_str = item_record.get('attributes')
+    if pd.notna(attributes_str) and isinstance(attributes_str, str):
+        try:
+            item_attributes = json.loads(attributes_str)
+        except json.JSONDecodeError:
+            item_attributes = {}
+    else:
+        item_attributes = {}
+        
+    # Retorna el objeto Item
+    return Item(
+        id=item_record['item_id'],
+        name=item_record.get('name', f"item_{itemId}"),
+        attributes=item_attributes
+    )
+
+# Endpoint: /item/{itemId} (PUT)
+@app.put("/item/{itemId}", response_model=Item, tags=["Sistema recomendador"])
+def update_item(itemId: int, item: Item):
+    """
+    Actualizar el nombre y los atributos de un ítem existente.
+    
+    Args:
+        itemId (int): ID del ítem a actualizar.
+        item (Item): Nuevos datos del ítem.
+    Returns:
+        Item: Datos del ítem actualizado.
+    """
+    try:
+        with sqlite3.connect(DB_NAME) as conn:
+            cursor = conn.cursor()
+            
+            # 1. Serializar los atributos a JSON
+            item_data = item.model_dump(exclude_defaults=True)
+            attributes_to_save = item_data.get('attributes', {})
+            attributes = json.dumps(attributes_to_save)
+            
+            # 2. Query de actualización
+            update_query = """
+            UPDATE items 
+            SET name = ?, attributes = ?
+            WHERE item_id = ?
+            """
+            
+            # 3. Ejecutar y verificar si se actualizó algún registro
+            cursor.execute(update_query, (item_data['name'], attributes, itemId))
+            
+            if cursor.rowcount == 0:
+                raise HTTPException(status_code=404, detail={"code": "ITEM_NOT_FOUND", "message": f"Item {itemId} not found for update"})
+            
+            conn.commit()
+            
+        # Retornamos el ítem actualizado (usando el ID proporcionado en el path)
+        item.id = itemId
+        return item
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail={"code": "DB_ERROR", "message": f"Error al actualizar ítem: {e}"}
+        )
