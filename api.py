@@ -325,6 +325,7 @@ app = FastAPI(
 #--- ENDPOINTS DE LA API ---
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Endpoint: /user (POST)
+# Endpoint para crear un nuevo usuario
 @app.post("/user", response_model=User, tags=["Sistema recomendador"])
 def create_user(user: User):
     """Insertar un nuevo usuario a la base de datos, serializando atributos a JSON.
@@ -354,6 +355,7 @@ def create_user(user: User):
         )
 
 # Endpoint: /user/{userId} (GET)
+# Endpoint para obtener los datos de un usuario
 @app.get("/user/{userId}", response_model=User, tags=["Sistema recomendador"])
 def get_user(userId: int):
     """Obtener los datos del usuario, leyendo directamente de SQLite.
@@ -388,6 +390,7 @@ def get_user(userId: int):
     )
 
 # Endpoint: /user/{userId}/recommend (GET)
+# Endpoint para obtener recomendaciones de items para un usuario específico
 @app.get("/user/{userId}/recommend", response_model=ItemArray, tags=["Sistema recomendador"])
 def recommend_items(userId: int, n: int = Query(5, description="numero de items a recomendar.", ge=1, le=50)):
     """Generar recomendaciones de items para un usuario específico.
@@ -430,6 +433,8 @@ def recommend_items(userId: int, n: int = Query(5, description="numero de items 
     
     # Endpoint: /preference (POST)
 
+# Endpoint: /preference (POST)
+# Endpoint para registrar o actualizar una preferencia de un usuario sobre un ítem
 @app.post("/preference", tags=["Sistema recomendador"])
 def create_preference(preference: Preference):
     """
@@ -483,6 +488,7 @@ def create_preference(preference: Preference):
         )
 
 # Endpoint: /preference/{userId}/{itemId} (GET)
+# Endpoint para obtener la preferencia de un usuario sobre un ítem específico
 @app.get("/preference/{userId}/{itemId}", response_model=Preference, tags=["Sistema recomendador"])
 def get_preference(userId: int, itemId: int):
     """
@@ -513,6 +519,7 @@ def get_preference(userId: int, itemId: int):
     )
 
 # Endpoint: /item/{itemId} (GET)
+# Endpoint para obtener los datos de un ítem específico
 @app.get("/item/{itemId}", response_model=Item, tags=["Sistema recomendador"])
 def get_item(itemId: int):
     """
@@ -552,6 +559,7 @@ def get_item(itemId: int):
     )
 
 # Endpoint: /item/{itemId} (PUT)
+# Endpoint para actualizar un ítem existente
 @app.put("/item/{itemId}", response_model=Item, tags=["Sistema recomendador"])
 def update_item(itemId: int, item: Item):
     """
