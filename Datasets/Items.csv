@@ -1,101 +1,101 @@
-item_id,name,price,category
-1,Crónicas de la Sombra,15.99,Ficción Fantástica
-2,El Jardín Silencioso,22.50,Novela Histórica
-3,Guía de Inversión Inteligente,35.00,Economía y Finanzas
-4,Recetas de la Abuela,18.75,Cocina
-5,Atlas Mundial Actualizado,49.99,Geografía
-6,Principios de Python Moderno,45.00,Programación
-7,El Misterio de la Calle Nueve,12.99,Thriller Policial
-8,Yoga para Principiantes,14.50,Salud y Bienestar
-9,Poemas del Despertar,9.99,Poesía
-10,Biografía de Marie Curie,28.00,Ciencia
-11,La Ciudad bajo la Niebla,16.50,Ficción Distópica
-12,Historia del Arte Renacentista,39.90,Arte
-13,Manual de Liderazgo Ágil,33.25,Negocios
-14,Postres Rápidos y Caseros,17.00,Cocina
-15,El Universo en Expansión,26.99,Astronomía
-16,Desarrollo Web con React,55.00,Programación
-17,El Caso del Collar Perdido,11.50,Thriller Policial
-18,Meditación Guiada,13.00,Salud y Bienestar
-19,Versos Olvidados,10.50,Poesía
-20,La Revolución Industrial,30.50,Historia
-21,El Último Dragón,19.99,Ficción Fantástica
-22,Las Arenas del Tiempo,24.00,Novela Histórica
-23,Finanzas Personales 2026,32.00,Economía y Finanzas
-24,Tapas Españolas,16.00,Cocina
-25,Mapas Antiguos,47.00,Geografía
-26,Bases de Datos SQL,40.00,Programación
-27,Asesinato en el Tren Nocturno,13.99,Thriller Policial
-28,Nutrición Deportiva,15.50,Salud y Bienestar
-29,Sonetos al Mar,9.50,Poesía
-30,El Legado de Einstein,27.50,Ciencia
-31,Mundo Virtual 3.0,17.50,Ficción Distópica
-32,Dibujo Clásico,36.00,Arte
-33,Gestión de Proyectos PMP,38.00,Negocios
-34,Panadería Artesanal,19.50,Cocina
-35,Agujeros Negros,29.99,Astronomía
-36,Algoritmos Avanzados en Java,52.00,Programación
-37,El Silencio del Testigo,12.00,Thriller Policial
-38,Remedios Naturales,14.00,Salud y Bienestar
-39,Rimas de la Luna,10.99,Poesía
-40,Civilizaciones Antiguas,31.00,Historia
-41,El Oráculo Perdido,18.99,Ficción Fantástica
-42,Voces de la Guerra Civil,23.50,Novela Histórica
-43,Criptomonedas y Blockchain,37.00,Economía y Finanzas
-44,Cocina Vegetariana,18.00,Cocina
-45,Culturas Indígenas de América,42.00,Geografía
-46,Machine Learning Básico,50.00,Programación
-47,Crimen en la Mansión,14.99,Thriller Policial
-48,Masajes Terapéuticos,16.50,Salud y Bienestar
-49,Cuentos Breves de Otoño,8.99,Poesía
-50,Geología Terrestre,25.00,Ciencia
-51,El Laberinto de Cristal,15.50,Ficción Distópica
-52,Escultura Moderna,34.00,Arte
-53,Marketing Digital,31.50,Negocios
-54,Recetas Veganas,17.50,Cocina
-55,Meteoritos y Cometas,28.99,Astronomía
-56,Ciberseguridad Esencial,48.00,Programación
-57,La Venganza del Inspector,13.50,Thriller Policial
-58,Aromaterapia,12.50,Salud y Bienestar
-59,La Balada del Viajero,11.99,Poesía
-60,Mitología Griega,29.00,Historia
-61,El Tesoro de Atlantis,20.50,Ficción Fantástica
-62,Época Medieval,25.50,Novela Histórica
-63,Bolsa de Valores Avanzada,41.00,Economía y Finanzas
-64,Cocina Mexicana Auténtica,19.00,Cocina
-65,Parques Nacionales,45.00,Geografía
-66,Redes Neuronales,60.00,Programación
-67,Testigo Ocular,15.99,Thriller Policial
-68,Dieta Keto,17.00,Salud y Bienestar
-69,Haikus Japoneses,10.00,Poesía
-70,Filosofía Clásica,33.00,Historia
-71,Sueños de Androides,16.99,Ficción Distópica
-72,Fotografía Digital,37.50,Arte
-73,Estrategias de Venta,34.50,Negocios
-74,Repostería Francesa,20.00,Cocina
-75,La Vida en Marte,30.99,Astronomía
-76,Desarrollo de Videojuegos Unity,58.00,Programación
-77,Sin Rastro,12.50,Thriller Policial
-78,Pilates en Casa,13.50,Salud y Bienestar
-79,Cartas de Amor Perdidas,9.00,Poesía
-80,Guerras Mundiales,35.50,Historia
-81,La Profecía del Sol,17.99,Ficción Fantástica
-82,Egipto Faraónico,26.50,Novela Histórica
-83,Microeconomía Aplicada,36.50,Economía y Finanzas
-84,Cócteles Clásicos,15.00,Cocina
-85,Mares y Océanos,43.00,Geografía
-86,Data Science con R,54.00,Programación
-87,El Último Recurso,14.50,Thriller Policial
-88,Yoga Aéreo,15.00,Salud y Bienestar
-89,El Eco de las Palabras,11.00,Poesía
-90,Renacimiento Cultural,32.50,Historia
-91,Robots en el Tiempo,14.99,Ficción Distópica
-92,Caligrafía Japonesa,35.00,Arte
-93,Negociación y Persuasión,39.00,Negocios
-94,Cocina Tailandesa,21.00,Cocina
-95,El Clima y el Cambio Global,31.99,Astronomía
-96,Cloud Computing AWS,57.00,Programación
-97,La Huella Digital,16.00,Thriller Policial
-98,Fitness Funcional,18.50,Salud y Bienestar
-99,Poemas del Infinito,12.00,Poesía
-100,La Conquista del Espacio,34.00,Ciencia
+id,name,price,category,description
+1,Crónicas de la Sombra,15.99,Ficción Fantástica,Una épica aventura en un mundo donde la luz se agota y los antiguos héroes deben despertar.
+2,El Jardín Silencioso,22.50,Novela Histórica,Una conmovedora historia ambientada en la posguerra que explora la redención y los secretos familiares.
+3,Guía de Inversión Inteligente,35.00,Economía y Finanzas,Inspirado en las enseñanzas sobre el value investing y la disciplina financiera a largo plazo.
+4,Recetas de la Abuela,18.75,Cocina,Compendio de platos tradicionales transmitidos por generaciones con el sabor del hogar.
+5,Atlas Mundial Actualizado,49.99,Geografía,Cartografía detallada y datos geopolíticos del mundo contemporáneo en alta resolución.
+6,Principios de Python Moderno,45.00,Programación,Guía técnica para dominar la sintaxis actual de Python y la programación asíncrona.
+7,El Misterio de la Calle Nueve,12.99,Thriller Policial,Un detective retirado se enfrenta a su único caso sin resolver tras la aparición de nuevas pistas.
+8,Yoga para Principiantes,14.50,Salud y Bienestar,Guía paso a paso de asanas y técnicas de respiración para iniciar el camino al equilibrio.
+9,Poemas del Despertar,9.99,Poesía,Versos que exploran la conexión entre la naturaleza y la conciencia humana al alba.
+10,Biografía de Marie Curie,28.00,Ciencia,La vida y obra de la científica que revolucionó la física con sus estudios sobre la radioactividad.
+11,La Ciudad bajo la Niebla,16.50,Ficción Distópica,En un futuro donde el sol es un mito una joven descubre la verdad detrás de las murallas.
+12,Historia del Arte Renacentista,39.90,Arte,Un análisis profundo de los maestros del Quattrocento y el Cinquecento como Da Vinci.
+13,Manual de Liderazgo Ágil,33.25,Negocios,Estrategias para gestionar equipos modernos utilizando metodologías Scrum y Kanban.
+14,Postres Rápidos y Caseros,17.00,Cocina,Soluciones dulces para el día a día que no requieren más de 30 minutos en la cocina.
+15,El Universo en Expansión,26.99,Astronomía,Un viaje desde el Big Bang hasta el destino final del cosmos para todos los públicos.
+16,Desarrollo Web con React,55.00,Programación,Aprende a crear aplicaciones escalables utilizando el framework más popular de JavaScript.
+17,El Caso del Collar Perdido,11.50,Thriller Policial,Una intriga de habitación cerrada que rinde homenaje a los clásicos de Agatha Christie.
+18,Meditación Guiada,13.00,Salud y Bienestar,Ejercicios prácticos para reducir el estrés y encontrar la paz mental en el mundo moderno.
+19,Versos Olvidados,10.50,Poesía,Antología de poemas líricos que rescatan emociones perdidas en la rutina diaria.
+20,La Revolución Industrial,30.50,Historia,Estudio de los cambios tecnológicos y sociales que transformaron el mundo en el siglo XVIII.
+21,El Último Dragón,19.99,Ficción Fantástica,La historia del encuentro fortuito entre un joven pastor y la última criatura legendaria.
+22,Las Arenas del Tiempo,24.00,Novela Histórica,Una epopeya ambientada en el antiguo Egipto durante el reinado de los faraones guerreros.
+23,Finanzas Personales 2026,32.00,Economía y Finanzas,Manual actualizado para gestionar ahorros e inversiones en la nueva economía digital.
+24,Tapas Españolas,16.00,Cocina,El arte del picoteo: recetas clásicas de tortilla.
+25,Mapas Antiguos,47.00,Geografía,Una colección visual de cómo los exploradores de antaño imaginaban los límites del mundo.
+26,Bases de Datos SQL,40.00,Programación,Domina el lenguaje de consulta estructurado y el diseño de esquemas relacionales.
+27,Asesinato en el Tren Nocturno,13.99,Thriller Policial,Un crimen imposible de resolver en un vagón sellado que atraviesa los Alpes.
+28,Nutrición Deportiva,15.50,Salud y Bienestar,Cómo alimentar el cuerpo para optimizar el rendimiento y la recuperación tras el ejercicio.
+29,Sonetos al Mar,9.50,Poesía,Una oda lírica a la inmensidad del océano y su relación eterna con la soledad humana.
+30,El Legado de Einstein,27.50,Ciencia,Explicación accesible de la relatividad y el impacto de Albert Einstein en la tecnología actual.
+31,Mundo Virtual 3.0,17.50,Ficción Distópica,Una sociedad que prefiere vivir conectada a una simulación mientras el mundo real cae.
+32,Dibujo Clásico,36.00,Arte,Técnicas fundamentales de proporción anatomía y sombreado para artistas en formación.
+33,Gestión de Proyectos PMP,38.00,Negocios,Guía de estudio basada en el PMBOK para certificar conocimientos en gestión profesional.
+34,Panadería Artesanal,19.50,Cocina,El secreto de la masa madre y cómo hornear panes rústicos con técnicas tradicionales.
+35,Agujeros Negros,29.99,Astronomía,Un estudio fascinante sobre los fenómenos más enigmáticos del tejido espaciotemporal.
+36,Algoritmos Avanzados en Java,52.00,Programación,Implementación de estructuras de datos complejas y optimización de código empresarial.
+37,El Silencio del Testigo,12.00,Thriller Policial,Un juicio de alto perfil donde el único testigo se niega a hablar por miedo a represalias.
+38,Remedios Naturales,14.00,Salud y Bienestar,El uso de plantas medicinales y terapias alternativas para dolencias comunes.
+39,Rimas de la Luna,10.99,Poesía,Versos románticos y melancólicos escritos bajo la influencia de la luz nocturna.
+40,Civilizaciones Antiguas,31.00,Historia,Un recorrido por Sumeria Roma los Mayas y China analizando sus ascensos y caídas.
+41,El Oráculo Perdido,18.99,Ficción Fantástica,Una joven debe encontrar el templo de los antiguos dioses para evitar el fin de su era.
+42,Voces de la Guerra Civil,23.50,Novela Histórica,Relatos humanos cruzados durante uno de los conflictos más dolorosos de la historia moderna.
+43,Criptomonedas y Blockchain,37.00,Economía y Finanzas,Guía completa sobre Bitcoin Ethereum y el futuro de los registros descentralizados.
+44,Cocina Vegetariana,18.00,Cocina,Platos creativos y nutritivos que ponen a las verduras en el centro de la mesa.
+45,Culturas Indígenas de América,42.00,Geografía,Estudio antropológico de los pueblos originarios desde Alaska hasta la Patagonia.
+46,Machine Learning Básico,50.00,Programación,Introducción práctica al aprendizaje automático y el entrenamiento de modelos predictivos.
+47,Crimen en la Mansión,14.99,Thriller Policial,Un detective de la vieja escuela debe investigar a una familia de aristócratas sospechosos.
+48,Masajes Terapéuticos,16.50,Salud y Bienestar,Técnicas de manipulación física para aliviar tensiones musculares y mejorar la circulación.
+49,Cuentos Breves de Otoño,8.99,Poesía,Narrativa corta con tintes poéticos que capturan la nostalgia del cambio de estación.
+50,Geología Terrestre,25.00,Ciencia,Análisis de la composición de la Tierra las placas tectónicas y la formación de minerales.
+51,El Laberinto de Cristal,15.50,Ficción Distópica,En un mundo de transparencia obligatoria la privacidad se convierte en el mayor acto de rebelión.
+52,Escultura Moderna,34.00,Arte,Un recorrido por las vanguardias del siglo XX desde el cubismo hasta el minimalismo.
+53,Marketing Digital,31.50,Negocios,Técnicas de SEO SEM y redes sociales para posicionar marcas en el mercado actual.
+54,Recetas Veganas,17.50,Cocina,Cocina 100% libre de productos animales sin renunciar al sabor ni a la textura.
+55,Meteoritos y Cometas,28.99,Astronomía,La historia de los visitantes espaciales que han impactado la evolución de nuestro planeta.
+56,Ciberseguridad Esencial,48.00,Programación,Principios fundamentales para proteger infraestructuras digitales contra ataques externos.
+57,La Venganza del Inspector,13.50,Thriller Policial,Un policía al borde del retiro decide hacer justicia por su cuenta en un caso personal.
+58,Aromaterapia,12.50,Salud y Bienestar,Uso de aceites esenciales para mejorar el estado de ánimo y la salud física.
+59,La Balada del Viajero,11.99,Poesía,Crónica lírica de un periplo por tierras lejanas buscando el sentido de la pertenencia.
+60,Mitología Griega,29.00,Historia,Los mitos de Zeus Atenea y los héroes que sentaron las bases de la cultura occidental.
+61,El Tesoro de Atlantis,20.50,Ficción Fantástica,Una expedición submarina encuentra algo más que ruinas en el fondo del Atlántico.
+62,Época Medieval,25.50,Novela Histórica,Caballeros castillos y la lucha por el poder en la Europa del siglo XII.
+63,Bolsa de Valores Avanzada,41.00,Economía y Finanzas,Análisis técnico y fundamental para inversores que buscan profesionalizar su operativa.
+64,Cocina Mexicana Auténtica,19.00,Cocina,Desde el mole poblano hasta los tacos al pastor los sabores reales de México.
+65,Parques Nacionales,45.00,Geografía,Guía visual de las reservas naturales más impresionantes del planeta.
+66,Redes Neuronales,60.00,Programación,Profundización en Deep Learning y arquitecturas complejas de inteligencia artificial.
+67,Testigo Ocular,15.99,Thriller Policial,Un fotógrafo captura accidentalmente un crimen y se convierte en el objetivo de la mafia.
+68,Dieta Keto,17.00,Salud y Bienestar,Plan de alimentación cetogénica para mejorar el metabolismo y la quema de grasas.
+69,Haikus Japoneses,10.00,Poesía,La belleza de lo breve capturada en la estructura tradicional de la poesía nipona.
+70,Filosofía Clásica,33.00,Historia,Las ideas de Sócrates Platón y Aristóteles explicadas para la vida contemporánea.
+71,Sueños de Androides,16.99,Ficción Distópica,Inspirado en los dilemas éticos sobre la conciencia artificial y lo que nos hace humanos.
+72,Fotografía Digital,37.50,Arte,Domina la cámara el revelado digital y la composición para capturar imágenes perfectas.
+73,Estrategias de Venta,34.50,Negocios,Psicología aplicada al cierre de negocios y la fidelización de clientes de alto valor.
+74,Repostería Francesa,20.00,Cocina,El arte de los macarons los croissants y las tartas más sofisticadas del mundo.
+75,La Vida en Marte,30.99,Astronomía,Posibilidades científicas y proyectos actuales para la colonización del planeta rojo.
+76,Desarrollo de Videojuegos Unity,58.00,Programación,Crea tus propios juegos desde cero utilizando el motor gráfico más versátil.
+77,Sin Rastro,12.50,Thriller Policial,Una mujer desaparece en un pueblo tranquilo y todos sus habitantes parecen ocultar algo.
+78,Pilates en Casa,13.50,Salud y Bienestar,Rutinas de entrenamiento de bajo impacto para fortalecer el core y mejorar la postura.
+79,Cartas de Amor Perdidas,9.00,Poesía,Correspondencia lírica encontrada en un desván que narra una historia de amor prohibido.
+80,Guerras Mundiales,35.50,Historia,Análisis militar y social de los dos grandes conflictos que definieron el siglo XX.
+81,La Profecía del Sol,17.99,Ficción Fantástica,Un joven elegido debe viajar al centro del mundo para reactivar el corazón solar.
+82,Egipto Faraónico,26.50,Novela Histórica,Intrigas palaciegas y la construcción de las grandes pirámides bajo la mirada de los dioses.
+83,Microeconomía Aplicada,36.50,Economía y Finanzas,El comportamiento de los mercados y la toma de decisiones individuales en la economía.
+84,Cócteles Clásicos,15.00,Cocina,Guía de mixología para preparar desde un Martini perfecto hasta un Mojito refrescante.
+85,Mares y Océanos,43.00,Geografía,Exploración de la vida marina y la importancia de las corrientes oceánicas en el clima.
+86,Data Science con R,54.00,Programación,Análisis estadístico y visualización de datos utilizando el lenguaje preferido por científicos.
+87,El Último Recurso,14.50,Thriller Policial,Un abogado defensor arriesga su carrera para salvar a un inocente condenado.
+88,Yoga Aéreo,15.00,Salud y Bienestar,Práctica de asanas utilizando columpios para alcanzar posturas imposibles en el suelo.
+89,El Eco de las Palabras,11.00,Poesía,Versos que reflexionan sobre el poder del lenguaje y el peso del silencio.
+90,Renacimiento Cultural,32.50,Historia,El florecimiento de las ciencias y las artes tras el fin de la Edad Media.
+91,Robots en el Tiempo,14.99,Ficción Distópica,Una inteligencia artificial viaja al pasado para intentar salvar a la humanidad de sí misma.
+92,Caligrafía Japonesa,35.00,Arte,El arte del Shodo: paciencia tinta y pincel para escribir con el alma.
+93,Negociación y Persuasión,39.00,Negocios,Técnicas de comunicación efectiva para resolver conflictos y llegar a acuerdos beneficiosos.
+94,Cocina Tailandesa,21.00,Cocina,El equilibrio perfecto entre lo dulce salado agrio y picante en recetas exóticas.
+95,El Clima y el Cambio Global,31.99,Astronomía,Cómo los factores astronómicos y humanos están alterando el equilibrio de la atmósfera.
+96,Cloud Computing AWS,57.00,Programación,Implementación y gestión de servicios en la nube utilizando la plataforma de Amazon.
+97,La Huella Digital,16.00,Thriller Policial,Un hacker se convierte en el principal sospechoso de un asesinato cibernético.
+98,Fitness Funcional,18.50,Salud y Bienestar,Entrenamientos basados en movimientos naturales para mejorar la calidad de vida diaria.
+99,Poemas del Infinito,12.00,Poesía,Una exploración metafísica de la existencia a través de la rima y la metáfora.
+100,La Conquista del Espacio,34.00,Ciencia,Desde el Sputnik hasta los viajes tripulados a la Luna y las futuras misiones espaciales.
