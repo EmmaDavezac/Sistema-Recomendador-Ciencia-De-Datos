@@ -5,7 +5,6 @@ import pandas as pd #Librería para manipulación de datos
 from sklearn.metrics.pairwise import cosine_similarity #Librería para cálculo de similitud del coseno
 import sqlite3 #Librería para manejar bases de datos SQLite
 import os #Librería para operaciones del sistema operativo
-import json #Librería para manejo de JSON
 from fastapi import FastAPI, HTTPException, Query #Librería para crear APIs
 from pydantic import BaseModel,ConfigDict,Field # Librería para validación de datos y creación de modelos
 from typing import List,Annotated,Optional # Tipos de datos para anotaciones
@@ -22,38 +21,43 @@ PREFERENCES_URL = './Datasets/Preferences.csv'# Ruta local del archivo CSV de pr
 #ESTOS MODELOS SE USAN PARA VALIDAR Y ESTRUCTURAR LOS DATOS DE ENTRADA Y SALIDA DE LA API
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class UserAttributes(BaseModel):
-    # Campos explícitos basados en la tabla 'users'
+    """ Modelo de atributos del usuario"""
+    # Atributos del usuario basados, optional significa que pueden estar ausentes en la solicitud
     telephone: Optional[str] = None
     birthdate: Optional[date] = None
     gender: Optional[str] = None
     created_at: Optional[date] = None
     
-    # Mantiene la flexibilidad para guardar datos dinámicos extra
+    # Configuración para permitir campos extra y excluir nulos en la serialización
     model_config = ConfigDict(extra="allow", exclude_none=True)
 
 class User(BaseModel):
+    """ Modelo de usuario"""
     id: int
     username: str
     attributes: UserAttributes = UserAttributes()
 
 class ItemAttributes(BaseModel):
-    # Campos explícitos basados en la tabla 'items'
+    """ Modelo de atributos del ítem"""
+    # Atributos del ítem, optional significa que pueden estar ausentes en la solicitud
     price: Optional[float] = None
     category: Optional[str] = None
     description: Optional[str] = None
-    
-
+    # Configuración para permitir campos extra y excluir nulos en la serialización
     model_config = ConfigDict(extra="allow", exclude_none=True)
 
 class Item(BaseModel):
+    """ Modelo de ítem"""
     id: int
     name: str
     attributes: ItemAttributes = ItemAttributes()
 
 class ItemArray(BaseModel):
+    """ Modelo para lista de ítems"""
     items: List[Item]
 
 class Preference(BaseModel):
+    """ Modelo de preferencia de usuario sobre un ítem"""
     user_id: int
     item_id: int
     # La validación preference_value (1 a 5)
@@ -65,15 +69,19 @@ class Preference(BaseModel):
             description="El valor de la preferencia debe ser un entero entre 1 y 5."
         )
     ]
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # --- LÓGICA DE DATOS Y PRE-PROCESAMIENTO ---
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def load_test_data(conn):
-    """Carga los datos de prueba desde los archivos CSV locales a la base de datos SQLite."""
+    """Carga los datos de prueba desde los archivos CSV locales a la base de datos SQLite.
+    Args: 
+        conn: Conexión activa a la base de datos SQLite.
+    """
     # Cargamos los datos desde los CSV
-    users_df = pd.read_csv(USERS_URL)
-    items_df = pd.read_csv(ITEMS_URL)
-    preferences_df = pd.read_csv(PREFERENCES_URL)
+    users_df = pd.read_csv(USERS_URL)# Cargamos los datos de usuarios
+    items_df = pd.read_csv(ITEMS_URL) # Cargamos los datos de items
+    preferences_df = pd.read_csv(PREFERENCES_URL) # Cargamos los datos de preferencias
     users_df.to_sql('users', conn, if_exists='append', index=False)# Insertamos los datos de usuarios
     items_df.to_sql('items', conn, if_exists='append', index=False)# Insertamos los datos de items
     preferences_df.to_sql('preferences', conn, if_exists='append', index=False)# Insertamos los datos de preferencias
@@ -81,7 +89,6 @@ def load_test_data(conn):
 def initialize_db():
     """
     Crea y puebla la base de datos SOLO si el archivo DB no existe.
-    Establece las claves primarias (compuestas) y foráneas.
     """
     try:
 
@@ -288,8 +295,7 @@ app = FastAPI(
 @app.post("/user", response_model=User, tags=["Sistema recomendador"])
 def create_user(user: User):
     """
-    Inserta un nuevo usuario en la base de datos mapeando los atributos
-    del modelo a las columnas específicas de la tabla 'users'.
+    Inserta un nuevo usuario en la base de datos.
     """
     try:
         with sqlite3.connect(DB_NAME) as conn:
@@ -314,18 +320,19 @@ def create_user(user: User):
                 attr.gender,
                 attr.created_at.isoformat() if attr.created_at else None
             )
-            
+            # Ejecutamos la inserción
             cursor.execute(insert_query, values)
+            # Guardamos los cambios
             conn.commit() 
-            
         return user
-        
+    # Manejo de errores específicos de SQLite
     except sqlite3.IntegrityError as e:
         # Error de ID duplicado o Violación de restricción
         raise HTTPException(
             status_code=400, 
             detail={"code": "INTEGRITY_ERROR", "message": f"Error de integridad en DB: {e}"}
         )
+    # Manejo de otros errores
     except Exception as e:
         raise HTTPException(
             status_code=500, 
@@ -336,41 +343,42 @@ def create_user(user: User):
 # Endpoint para obtener los datos de un usuario
 @app.get("/user/{userId}", response_model=User, tags=["Sistema recomendador"])
 def get_user(userId: int):
-    """ Obtiene los datos de un usuario mapeando las columnas de la DB al modelo User."""
+    """ Obtiene los datos de un usuario especifico"""
     try:
         with sqlite3.connect(DB_NAME) as conn:
             conn.row_factory = sqlite3.Row 
             cursor = conn.cursor()
+            # Realizamos la consulta para obtener los datos del usuario
             query = "SELECT id, username, telephone, birthdate, gender, created_at FROM users WHERE id = ?"
             cursor.execute(query, (userId,))
+            # Obtenemos la fila resultante
             row = cursor.fetchone()
-
+        # Si no se encuentra el usuario, retornamos un error 404
         if row is None:
             raise HTTPException(status_code=404, detail={"code": "USER_NOT_FOUND", "message": "..."})
-
+        # Convertimos la fila a un diccionario para facilitar el acceso
         user_dict = dict(row)
 
         # Función auxiliar para convertir fechas de forma segura
         def safe_parse_date(date_val):
             if date_val is None or date_val == "":
                 return None
-            # to_datetime de pandas es excelente detectando formatos como 5/15/1985
             return pd.to_datetime(date_val).date()
 
-        # Normalizamos los atributos antes de crear el objeto UserAttributes
+        # Construimos los atributos del usuario
         attributes = UserAttributes(
             telephone=user_dict.get('telephone'),
             birthdate=safe_parse_date(user_dict.get('birthdate')), # <-- Limpieza aquí
             gender=user_dict.get('gender'),
             created_at=safe_parse_date(user_dict.get('created_at')) # <-- Limpieza aquí
         )
-
+        # Construimos y retornamos el User
         return User(
             id=user_dict['id'],
             username=user_dict['username'],
             attributes=attributes
         )
-
+    # Manejo de errores
     except Exception as e:
         # Esto te ayudará a ver qué valor exacto falló si hay otro error
         raise HTTPException(status_code=500, detail={"code": "DB_ERROR", "message": str(e)})
@@ -382,10 +390,10 @@ def recommend_items(userId: int, n: int = Query(5, description="Número de items
     """
     Genera recomendaciones de items para un usuario específico utilizando filtro colaborativo basado en usuarios similares.
     """
-    # 1. Verificamos existencia del usuario de forma eficiente
+    # Verificamos existencia del usuario 
     with sqlite3.connect(DB_NAME) as conn:
         user_check = conn.execute("SELECT 1 FROM users WHERE id = ?", (userId,)).fetchone()
-    
+    # Si el usuario no existe, retornamos un error 404
     if not user_check:
         raise HTTPException(
             status_code=404, 
@@ -393,38 +401,37 @@ def recommend_items(userId: int, n: int = Query(5, description="Número de items
         )
 
     try:
-        # 2. Obtenemos los nombres de los ítems recomendados desde el motor
+        # Obtenemos los nombres de los ítems recomendados
         recommended_item_names = get_recommendations(userId, n)
         
-        # 3. Filtramos ITEMS_DF (que cargaste en initial_load)
-        # Nota: Asegúrate que ITEMS_DF tenga la columna 'id' y 'name'
+        # Filtramos el DataFrame de items para obtener los detalles de los ítems recomendados
         recommended_df = ITEMS_DF[ITEMS_DF['name'].isin(recommended_item_names)]
-        
+        # Construimos la lista de objetos Item para la respuesta
         item_objects = []
         for _, row in recommended_df.iterrows():
-            # Creamos el objeto de atributos con las columnas reales de la tabla items
+            #  Construimos los atributos del ítem
             item_attrs = ItemAttributes(
                 price=row.get('price'),
                 category=row.get('category'),
                 description=row.get('description')
             )
             
-            # Construimos el objeto Item respetando el nombre de columna 'id'
+            # Construimos el Item 
             item_objects.append(Item(
                 id=int(row['id']),
                 name=str(row['name']),
                 attributes=item_attrs
             ))
-            
+        # Retornamos la lista de ítems recomendados
         return ItemArray(items=item_objects)
-
+    # Manejo de errores
     except Exception as e:
         print(f"Error interno en recomendación para el usuario {userId}: {e}")
         raise HTTPException(
             status_code=500, 
             detail={"code": "INTERNAL_ERROR", "message": f"Error al generar recomendaciones: {e}"}
         )
-    
+       
 # Endpoint: /preference (POST)
 # Endpoint para registrar o actualizar una preferencia de un usuario sobre un ítem
 @app.post("/preference", tags=["Sistema recomendador"])
@@ -440,28 +447,27 @@ def create_preference(preference: Preference):
             user_exists = conn.execute("SELECT 1 FROM users WHERE id = ?", (preference.user_id,)).fetchone()
             if not user_exists:
                 raise HTTPException(status_code=404, detail={"code": "USER_NOT_FOUND", "message": f"ID {preference.user_id} no existe"})
-
             # Verificamos el ítem 
             item_exists = conn.execute("SELECT 1 FROM items WHERE id = ?", (preference.item_id,)).fetchone()
             if not item_exists:
                 raise HTTPException(status_code=404, detail={"code": "ITEM_NOT_FOUND", "message": f"ID {preference.item_id} no existe"})
-            
-            # 3. Insertar o actualizar (Upsert)
+            # Insertamos o actualizamos la preferencia
             insert_query = """
             INSERT INTO preferences (user_id, item_id, preference_value) 
             VALUES (?, ?, ?) 
             ON CONFLICT(user_id, item_id) DO UPDATE SET 
                 preference_value = excluded.preference_value;
             """
+            # Ejecutamos la consulta
             conn.execute(insert_query, (preference.user_id, preference.item_id, preference.preference_value))
+            # guardamos los cambios
             conn.commit()
 
         # RECALCULAR MATRICES 
-
         DF, MATRIX_NORM, USER_SIMILARITY, USERS_DF, ITEMS_DF, ROW_MEAN = initial_load()
         
         return {"code": "SUCCESS", "message": "Preferencia guardada y motor de recomendaciones actualizado"}
-    
+    # Manejo de errores
     except HTTPException:
         raise
     except Exception as e:
@@ -482,11 +488,11 @@ def get_preference(userId: int, itemId: int):
             # Usamos Row para acceder por nombre de columna
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
-            
+            # Realizamos la consulta SQL
             query = "SELECT user_id, item_id, preference_value FROM preferences WHERE user_id = ? AND item_id = ?"
             cursor.execute(query, (userId, itemId))
             row = cursor.fetchone()
-
+        # Verificamos si se encontró la preferencia
         if row is None:
             raise HTTPException(
                 status_code=404, 
@@ -496,13 +502,13 @@ def get_preference(userId: int, itemId: int):
                 }
             )
 
-        # Mapeo directo al modelo Pydantic
+        # Mapeo directo al modelo Preference
         return Preference(
             user_id=row['user_id'],
             item_id=row['item_id'],
             preference_value=row['preference_value']
         )
-
+    # Manejo de errores
     except HTTPException:
         raise
     except Exception as e:
@@ -510,24 +516,25 @@ def get_preference(userId: int, itemId: int):
             status_code=500, 
             detail={"code": "DB_ERROR", "message": f"Error al consultar preferencia: {str(e)}"}
         )
+
 # Endpoint: /item/{itemId} (GET)
 # Endpoint para obtener los datos de un ítem específico
 @app.get("/item/{itemId}", response_model=Item, tags=["Sistema recomendador"])
 def get_item(itemId: int):
     """
-    Obtener los datos de un ítem mapeando las columnas de la DB al modelo Item.
+    Obtener los datos de un ítem.
     """
     try:
         with sqlite3.connect(DB_NAME) as conn:
-            # Usamos Row para acceder fácilmente a los nombres de las columnas
+            # Usamos Row para acceder por nombre de columna
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             
-            # Consulta con las columnas reales definidas en initialize_db
+            # Realizamos la consulta SQL
             query = "SELECT id, name, price, category, description FROM items WHERE id = ?"
             cursor.execute(query, (itemId,))
             row = cursor.fetchone()
-
+        # Verificamos si se encontró el ítem
         if row is None:
             raise HTTPException(
                 status_code=404, 
@@ -550,12 +557,13 @@ def get_item(itemId: int):
             name=item_dict['name'],
             attributes=attributes
         )
-
+    # Manejo de errores
     except Exception as e:
         raise HTTPException(
             status_code=500, 
             detail={"code": "DB_ERROR", "message": f"Error al obtener ítem: {str(e)}"}
         )
+
 # Endpoint: /item/{itemId} (PUT)
 # Endpoint para actualizar un ítem existente
 @app.put("/item/{itemId}", response_model=Item, tags=["Sistema recomendador"])
@@ -569,17 +577,17 @@ def update_item(itemId: int, item: Item):
         with sqlite3.connect(DB_NAME) as conn:
             cursor = conn.cursor()
             
-            # 1. Extraemos los atributos del modelo ItemAttributes
+            # Extraemos los atributos del ítem
             attr = item.attributes
             
-            # 2. Query de actualización con las columnas reales
+            # Preparamos la consulta de actualización
             update_query = """
             UPDATE items 
             SET name = ?, price = ?, category = ?, description = ?
             WHERE id = ?
             """
             
-            # 3. Ejecutamos la actualización
+            # Ejecutamos la actualización
             cursor.execute(update_query, (
                 item.name, 
                 attr.price, 
@@ -596,7 +604,7 @@ def update_item(itemId: int, item: Item):
             
             conn.commit()
 
-        # 4. RECARGAR DATOS EN MEMORIA
+        # RECALCULAR MATRICES
         # Esto asegura que el sistema recomendador use el nuevo nombre/precio inmediatamente
         DF, MATRIX_NORM, USER_SIMILARITY, USERS_DF, ITEMS_DF, ROW_MEAN = initial_load()
             
@@ -610,3 +618,4 @@ def update_item(itemId: int, item: Item):
             status_code=500, 
             detail={"code": "DB_ERROR", "message": f"Error al actualizar ítem: {str(e)}"}
         )
+   
