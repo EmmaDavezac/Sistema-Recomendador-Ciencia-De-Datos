@@ -37,15 +37,6 @@ Las herramientas fueron elegidas para que la implementación sea lo mas sencilla
 * **Medición de Preferencias mediante ratings**: Se utiliza un valor numérico (*preference_value*) para cuantificar la interacción del usuario con el ítem.
 * **Manejo de Cold Start**: Para usuarios sin preferencias registradas (usuarios nuevos), el sistema recurre a los ítems más vendidos o más populares en toda la plataforma.
 
-## Modelo de Datos
-Se utiliza una base de datos local SQLite con las siguientes tablas
-
-|Tabla      |Clave Principal|Descripción y Atributos                                                                                       |
-------------|---------------|--------------------------------------------------------------------------------------------------------------|
-|users      |id             | Guarda id, username y todos los atributos adicionales del usuario serializados como JSON en attributes.      |
-|items      |item_id        | Guarda item_id, name y todos los atributos adicionales del usuario en attributes.                            |
-|preferences|(Combinada)    | Guarda la interacción: user_id, item_id y preference_value (valor del rating ).                              |
-
 
 ## Tutorial de Instalación y Ejecución de la API
 Este tutorial detalla los pasos para instalar las dependencias y ejecutar la API de recomendación en tu entorno local.
