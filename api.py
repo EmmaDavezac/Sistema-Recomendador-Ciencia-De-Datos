@@ -9,6 +9,15 @@ from fastapi import FastAPI, HTTPException, Query #Librería para crear APIs
 from pydantic import BaseModel,ConfigDict,Field # Librería para validación de datos y creación de modelos
 from typing import List,Annotated,Optional # Tipos de datos para anotaciones
 from datetime import date # Librería para manejo de fechas
+import logging # Librería para manejo de logs
+
+# Configuración para escribir logs en el archivo API.log
+logging.basicConfig(
+    level=logging.ERROR,# Nivel de logueo, esto indica el nivel mínimo de severidad a registrar, los niveles son DEBUG, INFO, WARNING, ERROR y CRITICAL.
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', # Formato del mensaje de log, incluye timestamp, nombre del logger, nivel de severidad y el mensaje
+    filename='API.log',# Nombre del archivo de log
+    filemode='a' # Añadir al archivo en lugar de sobrescribirlo
+)
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # --- VARIABLES DE CONFIGURACIÓN ---
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -88,7 +97,7 @@ def load_test_data(conn):
 
 def initialize_db():
     """
-    Crea y puebla la base de datos SOLO si el archivo DB no existe.
+    Crea el esquema de tablas si el archivo .db no existe en el directorio.
     """
     try:
 
@@ -132,6 +141,7 @@ def initialize_db():
             
     except Exception as e:
         print(f" Error al inicializar SQLite: {e}")
+        logging.error(f"Error al inicializar SQLite: {e}")
         raise
 
 def initial_load():
@@ -213,11 +223,14 @@ ON
 
 try:
     DF, MATRIX_NORM, USER_SIMILARITY, USERS_DF, ITEMS_DF, row_mean = initial_load()# Carga inicial de datos y matrices
-except Exception as e:# Manejo de errores en la carga inicial
+except Exception as e:# Manejo de errores en la carga inicial    
     print(f" ERROR FATAL: La aplicación no pudo iniciar debido al error de carga/procesamiento: {e}")
+    logging.critical(f"ERROR FATAL: La aplicación no pudo iniciar debido al error de carga/procesamiento: {e}")
+
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # --- LÓGICA DE RECOMENDACIÓN ---
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 def user_has_preferences(user_id: int) -> bool:
     """Verifica si un usuario tiene preferencias registradas en la matriz normalizada.
     Args:a
@@ -328,12 +341,14 @@ def create_user(user: User):
     # Manejo de errores específicos de SQLite
     except sqlite3.IntegrityError as e:
         # Error de ID duplicado o Violación de restricción
+        logging.error(f"Error de integridad al crear usuario: {e}")
         raise HTTPException(
             status_code=400, 
             detail={"code": "INTEGRITY_ERROR", "message": f"Error de integridad en DB: {e}"}
         )
     # Manejo de otros errores
     except Exception as e:
+        logging.error(f"Error al crear usuario: {e}")
         raise HTTPException(
             status_code=500, 
             detail={"code": "DB_ERROR", "message": f"Error al crear usuario: {e}"}
@@ -380,7 +395,8 @@ def get_user(userId: int):
         )
     # Manejo de errores
     except Exception as e:
-        # Esto te ayudará a ver qué valor exacto falló si hay otro error
+        # Esto ayudará a ver qué valor exacto falló si hay otro error
+        logging.error(f"Error al obtener usuario {userId}: {e}")
         raise HTTPException(status_code=500, detail={"code": "DB_ERROR", "message": str(e)})
     
 # Endpoint: /user/{userId}/recommend (GET)
@@ -395,6 +411,7 @@ def recommend_items(userId: int, n: int = Query(5, description="Número de items
         user_check = conn.execute("SELECT 1 FROM users WHERE id = ?", (userId,)).fetchone()
     # Si el usuario no existe, retornamos un error 404
     if not user_check:
+        logging.error(f"Usuario {userId} no encontrado para recomendaciones.")
         raise HTTPException(
             status_code=404, 
             detail={"code": "USER_NOT_FOUND", "message": f"User {userId} not found"}
@@ -426,6 +443,7 @@ def recommend_items(userId: int, n: int = Query(5, description="Número de items
         return ItemArray(items=item_objects)
     # Manejo de errores
     except Exception as e:
+        logging.error(f"Error interno en recomendación para el usuario {userId}: {e}")
         print(f"Error interno en recomendación para el usuario {userId}: {e}")
         raise HTTPException(
             status_code=500, 
@@ -471,6 +489,7 @@ def create_preference(preference: Preference):
     except HTTPException:
         raise
     except Exception as e:
+        logging.error(f"Error al crear/actualizar preferencia: {e}")
         raise HTTPException(
             status_code=500, 
             detail={"code": "DB_ERROR", "message": f"Error: {str(e)}"}
@@ -512,6 +531,7 @@ def get_preference(userId: int, itemId: int):
     except HTTPException:
         raise
     except Exception as e:
+        logging.error(f"Error al consultar preferencia: {e}")
         raise HTTPException(
             status_code=500, 
             detail={"code": "DB_ERROR", "message": f"Error al consultar preferencia: {str(e)}"}
@@ -559,6 +579,7 @@ def get_item(itemId: int):
         )
     # Manejo de errores
     except Exception as e:
+        logging.error(f"Error al obtener ítem {itemId}: {e}")
         raise HTTPException(
             status_code=500, 
             detail={"code": "DB_ERROR", "message": f"Error al obtener ítem: {str(e)}"}
@@ -614,6 +635,7 @@ def update_item(itemId: int, item: Item):
     except HTTPException:
         raise
     except Exception as e:
+        logging.error(f"Error al actualizar ítem {itemId}: {e}")
         raise HTTPException(
             status_code=500, 
             detail={"code": "DB_ERROR", "message": f"Error al actualizar ítem: {str(e)}"}

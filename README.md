@@ -1,11 +1,12 @@
 # Universidad Tecnológica Nacional - Facultad Regional Concepción del Uruguay
 ## Ciencia de datos - Sistema Recomendador
-Desarrollado por **Luciano Emmanuel Davezac**
+Proyecto desarrollado por **Emmanuel Davezac**
 
 ***
 
 ## Introducción
-El presente proyecto representa la resolución del Trabajo Práctico Final correspondiente a la materia **Ciencia de Datos** de la **UTN-FRCU** (Universidad Tecnológica Nacional - Facultad Regional Concepción del Uruguay). El mismo es un proyecto de minería de datos resolviendo una problematica utilizando la metodología CRISP-DM e implementando la solución mediante API REST.
+El presente proyecto representa la resolución del Trabajo Práctico Final correspondiente a la materia **Ciencia de Datos** de la carrera Ingeniería en Sistemas de Información de la **UTN-FRCU** (Universidad Tecnológica Nacional - Facultad Regional Concepción del Uruguay). 
+El mismo es un proyecto de minería de datos resolviendo una problematica utilizando la metodología CRISP-DM e implementando la solución mediante API REST en Python.
 
 ***
 
@@ -43,9 +44,10 @@ La API tiene las siguientes funcionalidades
 
 ## Herramientas utilizadas
 Las herramientas fueron elegidas para que la implementación sea lo mas sencilla posible y tenga buen rendimiento. Las herramientas utilizadas son:
-* **Python**:Utilizamos este lenguaje porque es sencillo, tiene muchas librerias, multiplataforma, tenemos experiencia y es el mismo que utilizamos en Google Collab, utilizamos un entorno virtual para no tener problemas con las librerias.
-* **Jupyter Notebook**: Esta herramiento nos permite tener dentro del mismo archivo todo el desarrollo de CRISP-DM, tanto el texto como el codigo en Python y estructurar todo mediante titulos. Inicialmente utilizamos Google Collab para el desarrollo de CRISP-DM, pero luego nos pasamos a Jupyter Notebook en un entorno local dentro de Visual Studio Code para mas comodidad y para trabajar tanto el desarrollo como la implementación dentro del mismo entorno virtual.
-* **FastAPI**: Para implementar la API, tambien contemplamos utlizar el framework FLASK, pero elegimos FastAPI por ser mas simple,ligero y genera documentación automaticamente.
+* **Python**: Utilizamos este lenguaje de programación porque es sencillo de utilizar, tiene muchas librerias utiles, es multiplataforma (Se puede usar en varios sistemas operativos o en docker),es versatil ya que lo podemos usar para la mineria de datos y para crear la API, tenemos experiencia utlizandolo y es el mismo que utilizamos en Google Collab, utilizaremos un entorno virtual para no tener problemas con las librerias ya instaladas en el host.
+* **Jupyter Notebook**: Esta herramienta nos permite tener dentro del mismo archivo todo el desarrollo de CRISP-DM, tanto el texto como el codigo en Python y estructurar todo mediante titulos. Inicialmente utilizamos Google Collab para el desarrollo de CRISP-DM, pero luego nos pasamos a Jupyter Notebook en un entorno local dentro de Visual Studio Code para mas comodidad y para trabajar tanto el desarrollo como la implementación dentro del mismo entorno virtual.
+* **FastAPI**: Para implementar la API, tambien contemplamos utlizar el framework FLASK, pero elegimos FastAPI por ser mas simple, mas ligero y porque genera documentación automaticamente (SWAGGER y ReDoc).
+* **Uvicorn**: es un servidor ASGI (Asynchronous Server Gateway Interface) para aplicaciones Python, que permite ejecutar frameworks web asíncronos como FastAPI y es ideal para desarrollo por su opción de recarga automática
 * **SQLite**: Para implementar la base de datos, porque no necesita un servidor externo para la base de datos, lo que nos simplifica la implementacion.
 * **Pandas**: Para la manipulacion de datos, en versiones iniciales usamos Polars, pero terminamos usar Pandas porque teniamos mas experiencia con esta.
 
@@ -95,7 +97,7 @@ pip install -r requirements.txt
 **1. Iniciar la API**
 Ejecuta la API usando el servidor Uvicorn:
 ```console
-uvicorn api:app --reload
+uvicorn API:app --reload
 ```
 * *api*: Es el nombre del archivo Python.
 * *app*: Es el nombre de la instancia de FastAPI dentro de ese archivo.
@@ -103,9 +105,16 @@ uvicorn api:app --reload
 
 **2. Acceder a la Documentación**
 Una vez que veas el mensaje de que Uvicorn está corriendo, la API está lista.
-*  Podemos probar la API desde la Documentación interactiva generada automaticamente por FastAPI ingresando a `http://127.0.0.1:8000/docs`
-![Alt text](image.png)
-Aqui vamos a vert todos los endpoints, ejemplos de como usarlo y vamos a poder probarlos para entender mejor la API.
+*  Podemos probar la API desde la Documentación interactiva generada automaticamente por FastAPI ingresando a `http://127.0.0.1:8000/docs`, esta documentación interactiva se puede utilizar para explorar y probar los endpoints en tiempo real. 
+Aqui vamos a ver todos los endpoints, ejemplos de como usarlo y vamos a poder probarlos para entender mejor la API.
+![Alt text](images/image.png)
+
+
+* Tambien podemos acceder a la documentación generada mas detallada ingresando a `http://127.0.0.1:8000/redoc`
+![Alt text](images/image-1.png)
+
+* Esta pagina tambien nos permite descargar la especificación de la API en formato Open API
+![Alt text](images/image-2.png)
 
 **3. Usar la API**
 La URL de acceso de la api es 
@@ -116,3 +125,4 @@ Podemos probar la API con herramientas como Thunder Client, Postman o consumirla
 
 ## Información de la versión
 En el archivo **version_notes.md** se describen los cambios realizados en esta versión respecto a la anterior.
+
