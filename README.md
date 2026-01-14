@@ -1,11 +1,33 @@
-# Sistema Recomendador-Ciencia de datos-UTN FRCU
+# Universidad Tecnológica Nacional - Facultad Regional Concepción del Uruguay
+## Ciencia de datos - Sistema Recomendador
+Desarrollado por **Luciano Emmanuel Davezac**
+
+***
+
 ## Introducción
-El presente proyecto representa la resolución del Trabajo Práctico Final correspondiente a la materia Ciencia de Datos de la Universidad Tecnológica Nacional (UTN FRCU).
+El presente proyecto representa la resolución del Trabajo Práctico Final correspondiente a la materia **Ciencia de Datos** de la **UTN-FRCU** (Universidad Tecnológica Nacional - Facultad Regional Concepción del Uruguay). El mismo es un proyecto de minería de datos resolviendo una problematica utilizando la metodología CRISP-DM e implementando la solución mediante API REST.
+
+***
+
+## Problema
+* El trabajo práctico integrador es un trabajo de desarorllo en el que se deberán implementar la metodología CRISP-DM para diseñar un sistema recomendador de algún item de interés para el grupo, como pueden ser libros, revistas, artículos de consumo, o cualquier otro. 
+
+* Supongan un comitente vendedor de estos items a través de una plataforma virtual, y su objetivo de negocio es aumentar las ganancias por ventas en un 10% para el año 2026, en contraste con lo vendido en el año 2025. 
+
+* Este comitente les explica que tiene su sistema desarrollado sobre una web, con un carrusel que muestra a los usuarios un numero de artículos que pueden ser de su interés, y que actualmente muestra artículos aleatorios. El comitente también manifiesta que “hace 25 años que vende los mismos 100 artículos, y que esto no va a cambiar, que por cábala siempre vende 100, no hay forma de que se agreguen items nuevos”. No obstante, también “recibe muchos usuarios nuevos todo el tiempo y que, a ojo de buen cubero, compran siempre alrededor de 7 u 8 artículos cada uno, a lo sumo algunos comprarán 10, pero puede cambiar en cualquier momento, si la situación mejora”.
+
+* Ya que no existe ningún sistema pre-existente, no se cuenta con una base de datos, por lo que se deberá diseñar una que guarde datos de los usuarios, datos de los items y las preferencias. El comitente les manifiesta que no tiene ni idea de estas cosas, y confía en su experticia para hacerlo. 
+
+* Los desarrolladores de la web les proporciona la definición de una API que deberán construir, la cual se adjunta.Cualquier inconveniente o información que necesiten saber, el comitente siempre está disponible para consulta, a través del correo electrónico **gd.rottoli@gmail.com**
+
+***
 
 ## Descripción del Sistema
 Este proyecto implementa un Sistema Recomendador de filtro colaborativo basado en similitud entre usuarios. 
-El sistema fue desarrollado bajo la metodología CRISP-DM  e implementado como API REST.
-Este se adhiere a la especificación de endpoints proporcionada por el comitente, pero agrega otros endpoints que se creyeron necesarios.
+El sistema fue desarrollado bajo la metodología CRISP-DM e implementado como API REST.
+Este se adhiere a la especificación de en formato OPEN API proporcionada por el comitente, pero agrega otros endpoints que se creyeron necesarios para tener un mayor control sobre la API.
+
+***
 
 ## Endpoints de la API
 La API tiene las siguientes funcionalidades
@@ -17,26 +39,32 @@ La API tiene las siguientes funcionalidades
 * `/item/{itemId}` (GET): Endpoint para obtener los datos de un ítem específico.
 * `/item/{itemId}` (PUT): Endpoint para actualizar un ítem existente.
 
+***
 
 ## Herramientas utilizadas
 Las herramientas fueron elegidas para que la implementación sea lo mas sencilla posible y tenga buen rendimiento. Las herramientas utilizadas son:
-* **Python**:Utilizamos este lenguaje porque es sencillo, tiene muchas librerias, multiplataforma, tenemos experiencia y es el mismo que utilizamos en Collab.
+* **Python**:Utilizamos este lenguaje porque es sencillo, tiene muchas librerias, multiplataforma, tenemos experiencia y es el mismo que utilizamos en Google Collab, utilizamos un entorno virtual para no tener problemas con las librerias.
+* **Jupyter Notebook**: Esta herramiento nos permite tener dentro del mismo archivo todo el desarrollo de CRISP-DM, tanto el texto como el codigo en Python y estructurar todo mediante titulos. Inicialmente utilizamos Google Collab para el desarrollo de CRISP-DM, pero luego nos pasamos a Jupyter Notebook en un entorno local dentro de Visual Studio Code para mas comodidad y para trabajar tanto el desarrollo como la implementación dentro del mismo entorno virtual.
 * **FastAPI**: Para implementar la API, tambien contemplamos utlizar el framework FLASK, pero elegimos FastAPI por ser mas simple,ligero y genera documentación automaticamente.
 * **SQLite**: Para implementar la base de datos, porque no necesita un servidor externo para la base de datos, lo que nos simplifica la implementacion.
 * **Pandas**: Para la manipulacion de datos, en versiones iniciales usamos Polars, pero terminamos usar Pandas porque teniamos mas experiencia con esta.
 
+***
 
 ## Consideraciones 
-* Como no se indican explicitamente los productos en la documentacion, creamos 100 productos genericos para la demostracion del sistema. En este caso son libros, pero este programa funciona para cualquier tipo de items siempre que se respete el formato.
-* Creamos un conjunto de 700 usuarios utilizando IA para la demostracion del sistema.
-* Creamos aproximadamente 5600 preferencias de manera aleatoria mediante IA entre los Usuarios y los Items para la demostracion del sistema.
+* Como no se indican explicitamente los productos en la documentacion, creamos 100 productos genericos para la demostración del sistema. En este caso son libros, pero este programa funciona para cualquier tipo de items siempre que se respete el formato.
+* Creamos un conjunto de 700 usuarios para la demostracion del sistema.
+* Creamos aproximadamente 5600 preferencias de manera aleatoria entre los Usuarios y los Items para la demostración del sistema.
 * Estos conjuntos se pueden reemplazar por datos verdaderos.
+
+***
 
 ## Caracteristicas del Sistema
 * **Filtro Colaborativo Basado en Usuarios**: Se enfoca en encontrar usuarios con gustos similares para generar recomendaciones.
 * **Medición de Preferencias mediante ratings**: Se utiliza un valor numérico (*preference_value*) para cuantificar la interacción del usuario con el ítem.
 * **Manejo de Cold Start**: Para usuarios sin preferencias registradas (usuarios nuevos), el sistema recurre a los ítems más vendidos o más populares en toda la plataforma.
 
+***
 
 ## Tutorial de Instalación y Ejecución de la API
 Este tutorial detalla los pasos para instalar las dependencias y ejecutar la API de recomendación en tu entorno local.
@@ -79,9 +107,12 @@ Una vez que veas el mensaje de que Uvicorn está corriendo, la API está lista.
 ![Alt text](image.png)
 Aqui vamos a vert todos los endpoints, ejemplos de como usarlo y vamos a poder probarlos para entender mejor la API.
 
-**3.usar la API**
+**3. Usar la API**
 La URL de acceso de la api es 
 ```python
 http://127.0.0.1:8000
 ``` 
-Podemos probar la API con herramientas como ThunderClient o consumirla usarla mediante codigo.
+Podemos probar la API con herramientas como Thunder Client, Postman o consumirla usarla mediante codigo.
+
+## Información de la versión
+En el archivo **version_notes.md** se describen los cambios realizados en esta versión respecto a la anterior.
