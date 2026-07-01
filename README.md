@@ -1,6 +1,8 @@
 # Universidad Tecnológica Nacional - Facultad Regional Concepción del Uruguay
 ## Ciencia de datos - Sistema Recomendador
-Proyecto desarrollado por **Emmanuel Davezac**
+Proyecto desarrollado por 
+* **Emmanuel Davezac**
+*  poner los otros nombres
 
 ***
 
