@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Recomendador de Libros</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <header class="app-header hidden">
+        <div class="header-container">
+            <div class="brand">
+                <i class="fa-solid fa-book-bookmark brand-icon"></i>
+                <span class="logo-text">Bookverse</span>
+            </div>
+            
+            <!-- Navegación de pestañas en la navbar -->
+            <nav class="navbar-tabs" id="navbar-tabs">
+                <button class="nav-tab-btn active" data-tab="recommendations">
+                    <i class="fa-solid fa-wand-magic-sparkles icon-left"></i> Recomendaciones
+                </button>
+                <button class="nav-tab-btn" data-tab="ratings">
+                    <i class="fa-solid fa-star-half-stroke icon-left"></i> Mis Valoraciones
+                </button>
+                <button class="nav-tab-btn" data-tab="catalog">
+                    <i class="fa-solid fa-list icon-left"></i> Catálogo
+                </button>
+                <button class="nav-tab-btn" data-tab="stats">
+                    <i class="fa-solid fa-chart-pie icon-left"></i> Estadísticas
+                </button>
+            </nav>
+            
+            <!-- Menú de Usuario con Dropdown -->
+            <div class="user-menu-container">
+                <span class="user-email-display" id="user-email-navbar">correo@ejemplo.com</span>
+                <div class="dropdown-trigger" id="profile-dropdown-trigger">
+                    <i class="fa-solid fa-circle-user avatar-icon"></i>
+                    <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                </div>
+                <div class="dropdown-menu hidden" id="profile-dropdown-menu">
+                    <button class="dropdown-item" id="btn-dropdown-profile">
+                        <i class="fa-solid fa-user-gear"></i> Mi Perfil
+                    </button>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item danger" id="btn-dropdown-logout">
+                        <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-container hidden">
+        <!-- Pestaña 1: Recomendaciones -->
+        <div id="tab-recommendations" class="tab-content active">
+            <div class="tab-section-header">
+                <h3 id="recommendations-title" class="tab-title">Cargando recomendaciones...</h3>
+                <div class="recommendations-control">
+                    <label for="recommendations-limit" style="font-size: 0.85rem; color: var(--text-muted); margin-right: 0.5rem;"><i class="fa-solid fa-sliders"></i> Cantidad:</label>
+                    <select id="recommendations-limit" class="filter-select" style="background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.85rem; font-family: var(--font-sans); outline: none; cursor: pointer; transition: border-color 0.2s ease;">
+                        <option value="3">3 libros</option>
+                        <option value="5" selected>5 libros</option>
+                        <option value="10">10 libros</option>
+                        <option value="15">15 libros</option>
+                        <option value="20">20 libros</option>
+                    </select>
+                </div>
+            </div>
+            <div id="recommendations-container" class="recommendations-list">
+                <div class="loading-placeholder">Cargando sugerencias del recomendador...</div>
+            </div>
+        </div>
+
+        <!-- Pestaña 2: Mis Valoraciones -->
+        <div id="tab-ratings" class="tab-content">
+            <div class="tab-section-header">
+                <h3 class="tab-title">Libros calificados</h3>
+            </div>
+            <div id="ratings-container" class="ratings-list">
+                <div class="empty-placeholder">Aún no has calificado ningún libro.</div>
+            </div>
+        </div>
+
+        <!-- Pestaña 3: Catálogo Completo -->
+        <div id="tab-catalog" class="tab-content">
+            <div class="tab-section-header">
+                <h3 class="tab-title">Libros del catálogo</h3>
+                <div class="search-wrapper">
+                    <input type="text" id="catalog-search" placeholder="Buscar por título o categoría...">
+                    <span class="search-icon-symbol"><i class="fa-solid fa-magnifying-glass"></i></span>
+                </div>
+            </div>
+            <div class="category-filters">
+                <button class="filter-pill active" data-category="all">Todos</button>
+                <button class="filter-pill" data-category="ficción">Ficción</button>
+                <button class="filter-pill" data-category="programación">Programación</button>
+                <button class="filter-pill" data-category="cocina">Cocina</button>
+                <button class="filter-pill" data-category="finanzas">Negocios</button>
+                <button class="filter-pill" data-category="salud">Bienestar</button>
+                <button class="filter-pill" data-category="humanities">Ciencia y Arte</button>
+            </div>
+            <div id="catalog-container" class="catalog-list">
+                <div class="loading-placeholder">Cargando catálogo...</div>
+            </div>
+        </div>
+
+        <!-- Pestaña 4: Estadísticas -->
+        <div id="tab-stats" class="tab-content">
+            <div class="tab-section-header">
+                <h3 class="tab-title">Mis Estadísticas de Lectura</h3>
+            </div>
+            <div class="stats-dashboard">
+                <!-- Tarjeta 1: Total Calificados -->
+                <div class="stats-card">
+                    <div class="stats-card-icon"><i class="fa-solid fa-book"></i></div>
+                    <div class="stats-card-info">
+                        <span class="stats-card-label">Libros valorados</span>
+                        <span class="stats-card-value" id="stats-total-rated">0</span>
+                    </div>
+                </div>
+                <!-- Tarjeta 2: Calificación Promedio -->
+                <div class="stats-card">
+                    <div class="stats-card-icon"><i class="fa-solid fa-star" style="color: var(--star-active);"></i></div>
+                    <div class="stats-card-info">
+                        <span class="stats-card-label">Calificación promedio</span>
+                        <span class="stats-card-value" id="stats-avg-rating">0.0</span>
+                    </div>
+                </div>
+                <!-- Tarjeta 3: Categoría Favorita -->
+                <div class="stats-card">
+                    <div class="stats-card-icon"><i class="fa-solid fa-bookmark" style="color: #c084fc;"></i></div>
+                    <div class="stats-card-info">
+                        <span class="stats-card-label">Categoría favorita</span>
+                        <span class="stats-card-value" id="stats-fav-category">Ninguna</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stats-charts-row">
+                <div class="stats-chart-card card">
+                    <h4>Distribución de Categorías Calificadas</h4>
+                    <div id="stats-genres-distribution" class="stats-genres-distribution">
+                        <!-- Dinámico -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Pantalla de Autenticación dedicada (Login/Signup unificado) -->
+    <div id="auth-screen" class="auth-screen">
+        <div class="auth-split-layout">
+            <!-- Columna Izquierda: Mensaje de Bienvenida / Hero -->
+            <div class="auth-hero-side">
+                <div class="auth-hero-content">
+                    <i class="fa-solid fa-book-bookmark auth-hero-logo"></i>
+                    <h1 class="auth-hero-title">Bookverse</h1>
+                    <p class="auth-hero-subtitle">Plataforma de Recomendación y Gestión de Lecturas Inteligente</p>
+                    
+                    <div class="auth-hero-features">
+                        <div class="hero-feature">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Recomendaciones personalizadas basadas en algoritmos avanzados de Ciencia de Datos y Machine Learning.</span>
+                        </div>
+                        <div class="hero-feature">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Explora un catálogo real de más de 100 libros con portadas, autores y descripciones completas.</span>
+                        </div>
+                        <div class="hero-feature">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Califica tus libros leídos y descubre nuevas lecturas similares a tus gustos individuales.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Columna Derecha: Tarjeta de Login / Signup -->
+            <div class="auth-form-side">
+                <div class="auth-card">
+                    <!-- Sección de Login -->
+                    <div id="auth-login-view" class="auth-view">
+                        <h2 class="auth-card-title">Bienvenido de nuevo</h2>
+                        <p class="auth-card-desc">Ingresa tus credenciales para acceder a tu biblioteca personalizada.</p>
+                        
+                        <form id="auth-login-form" class="user-form">
+                            <div class="control-group">
+                                <label for="auth-username-input">Usuario o ID de Usuario</label>
+                                <div class="input-icon-wrapper">
+                                    <i class="fa-solid fa-envelope input-icon"></i>
+                                    <input type="text" id="auth-username-input" required placeholder="correo@ejemplo.com o tu ID numérico">
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label for="auth-password-input">Contraseña</label>
+                                <div class="input-icon-wrapper">
+                                    <i class="fa-solid fa-lock input-icon"></i>
+                                    <input type="password" id="auth-password-input" value="••••••••" required placeholder="Ingresa tu contraseña">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full btn-large">
+                                <i class="fa-solid fa-right-to-bracket icon-left"></i> Iniciar Sesión
+                            </button>
+                        </form>
+                        
+                        <div class="auth-switch-prompt">
+                            ¿No tienes cuenta? <a href="#" id="link-go-to-signup">Regístrate aquí</a>
+                        </div>
+                        
+                        <div class="auth-demo-prompt-box">
+                            <button id="btn-toggle-demo-users" class="btn btn-secondary btn-sm btn-full">
+                                <i class="fa-solid fa-users icon-left"></i> Ver usuarios de prueba (Demo)
+                            </button>
+                            <div id="demo-users-popover" class="demo-users-popover hidden">
+                                <p class="demo-popover-text">Selecciona un usuario de prueba para ingresar instantáneamente:</p>
+                                <div class="search-wrapper popover-search">
+                                    <input type="text" id="demo-user-search" placeholder="Buscar ID o correo...">
+                                    <span class="search-icon-symbol"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                </div>
+                                <div id="demo-users-list" class="demo-users-list">
+                                    <!-- Dinámico -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección de Signup -->
+                    <div id="auth-signup-view" class="auth-view hidden">
+                        <h2 class="auth-card-title">Crea tu Cuenta</h2>
+                        <p class="auth-card-desc">Completa el formulario para registrarte en la plataforma de forma gratuita.</p>
+                        
+                        <form id="auth-signup-form" class="user-form">
+                            <div class="control-group">
+                                <label for="auth-new-username">Correo electrónico</label>
+                                <div class="input-icon-wrapper">
+                                    <i class="fa-solid fa-envelope input-icon"></i>
+                                    <input type="email" id="auth-new-username" required placeholder="correo@ejemplo.com">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="control-group">
+                                    <label for="auth-new-password">Contraseña</label>
+                                    <div class="input-icon-wrapper">
+                                        <i class="fa-solid fa-lock input-icon"></i>
+                                        <input type="password" id="auth-new-password" value="••••••••" required placeholder="Contraseña">
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label for="auth-new-password-confirm">Confirmar</label>
+                                    <div class="input-icon-wrapper">
+                                        <i class="fa-solid fa-lock input-icon"></i>
+                                        <input type="password" id="auth-new-password-confirm" value="••••••••" required placeholder="Confirmar">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="control-group">
+                                    <label for="auth-new-phone">Teléfono</label>
+                                    <div class="input-icon-wrapper">
+                                        <i class="fa-solid fa-phone input-icon"></i>
+                                        <input type="text" id="auth-new-phone" placeholder="11-4501-1350">
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label for="auth-new-birthdate">Fecha Nacimiento</label>
+                                    <input type="date" id="auth-new-birthdate">
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label for="auth-new-gender">Género</label>
+                                <select id="auth-new-gender">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="M">Masculino</option>
+                                    <option value="F">Femenino</option>
+                                    <option value="X">No binario</option>
+                                </select>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-full btn-large">
+                                <i class="fa-solid fa-user-plus icon-left"></i> Registrar Cuenta
+                            </button>
+                        </form>
+                        
+                        <div class="auth-switch-prompt">
+                            ¿Ya tienes una cuenta? <a href="#" id="link-go-to-login">Inicia sesión aquí</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Perfil de Usuario -->
+    <div id="profile-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h2 class="modal-title"><i class="fa-solid fa-circle-user icon-left"></i> Mi Perfil</h2>
+            <div id="user-profile-display" class="profile-display">
+                <!-- Dinámico -->
+            </div>
+            <div class="modal-actions" style="margin-top: 2rem;">
+                <button type="button" id="btn-close-profile" class="btn btn-primary btn-full">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        <div class="footer-container">
+            <span>UTN Regional Concepción del Uruguay • Ciencia de Datos</span>
+            <span>Desarrollado por Emmanuel Davezac • 2026</span>
+        </div>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>

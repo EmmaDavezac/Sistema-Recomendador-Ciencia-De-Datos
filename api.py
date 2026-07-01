@@ -6,6 +6,8 @@ from sklearn.metrics.pairwise import cosine_similarity #Librería para cálculo 
 import sqlite3 #Librería para manejar bases de datos SQLite
 import os #Librería para operaciones del sistema operativo
 from fastapi import FastAPI, HTTPException, Query #Librería para crear APIs
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel,ConfigDict,Field # Librería para validación de datos y creación de modelos
 from typing import List,Annotated,Optional # Tipos de datos para anotaciones
 from datetime import date # Librería para manejo de fechas
@@ -91,6 +93,11 @@ def load_test_data(conn):
     users_df = pd.read_csv(USERS_URL)# Cargamos los datos de usuarios
     items_df = pd.read_csv(ITEMS_URL) # Cargamos los datos de items
     preferences_df = pd.read_csv(PREFERENCES_URL) # Cargamos los datos de preferencias
+    
+    # Convertimos las fechas a formato estándar ISO (YYYY-MM-DD) para asegurar homogeneidad en la base de datos
+    users_df['birthdate'] = pd.to_datetime(users_df['birthdate'], format='%m/%d/%Y').dt.strftime('%Y-%m-%d')
+    users_df['created_at'] = pd.to_datetime(users_df['created_at'], format='%m/%d/%Y').dt.strftime('%Y-%m-%d')
+    
     users_df.to_sql('users', conn, if_exists='append', index=False)# Insertamos los datos de usuarios
     items_df.to_sql('items', conn, if_exists='append', index=False)# Insertamos los datos de items
     preferences_df.to_sql('preferences', conn, if_exists='append', index=False)# Insertamos los datos de preferencias
@@ -113,7 +120,7 @@ def initialize_db():
             telephone TEXT,
             birthdate DATE,
             gender TEXT CHECK (gender IN ('F', 'M', 'X') OR gender IS NULL),
-            created_at DATE
+            created_at DATE DEFAULT CURRENT_DATE
         );
 
         CREATE TABLE IF NOT EXISTS items (
@@ -191,9 +198,9 @@ ON
     users_df['id'] = users_df['id'].astype(int)# Aseguramos que la columna 'id' sea de tipo entero
     users_df['username'] = users_df['username'].astype(str)
     users_df['telephone'] = users_df['telephone'].astype(str)# Aseguramos que la columna 'telephone' sea de tipo string
-    users_df['birthdate'] = pd.to_datetime(users_df['birthdate'])# Convertimos la columna 'birthdate' a tipo datetime
+    users_df['birthdate'] = pd.to_datetime(users_df['birthdate'], errors='coerce')# Convertimos la columna 'birthdate' a tipo datetime
     users_df['gender'] = users_df['gender'].astype(str)# seguramos que la columna 'gender' sea de tipo string
-    users_df['created_at'] = pd.to_datetime(users_df['created_at'])# Convertimos la columna 'created_at' a tipo datetime
+    users_df['created_at'] = pd.to_datetime(users_df['created_at'], errors='coerce')# Convertimos la columna 'created_at' a tipo datetime
     items_df['id'].dropna(inplace=True)# Eliminamos filas con valores nulos en la columna 'id'
     items_df['id'] = items_df['id'].astype(int)# Aseguramos que la columna 'id' sea de tipo entero
     items_df['name'] = items_df['name'].astype(str)# Aseguramos que la columna 'name' sea de tipo string
@@ -256,11 +263,15 @@ def get_recommendations(user_id: int, number_max_of_recommendations: int) -> lis
     Returns:
         list: Lista de nombres de items recomendados.
     """
-    K_NEIGHBORS = 100 # Número usuarios similares a considerar
+    K_NEIGHBORS = 50 # Número usuarios similares a considerar (alineado con la evaluación en el notebook)
     if user_has_preferences(user_id): # Usuario existente con preferencias
         user_id_str = str(user_id)# Convertimos a string para coincidir con los índices del DataFrame
         user_items = MATRIX_NORM.loc[user_id]# Obtenemos las preferencias del usuario
         items_comprados = user_items[user_items.notna()].index.tolist()# Items comprados por el usuario
+
+        user_mean_rating = DF[DF['user_id'] == user_id]['preference_value'].mean()
+        if pd.isna(user_mean_rating):
+            user_mean_rating = 3.0
 
         similar_users = ( # Obtenemos usuarios similares
             USER_SIMILARITY[user_id_str]
@@ -281,7 +292,13 @@ def get_recommendations(user_id: int, number_max_of_recommendations: int) -> lis
             return cold_start_items_recommendations(number_max_of_recommendations)# Recomendaciones por popularidad
         candidate_matrix = similar_user_preferences[candidate_items].copy()# Matriz de items candidatos
         weighted_scores = candidate_matrix.multiply(similar_users, axis=0)# Puntuaciones ponderadas
-        recommendation_scores = weighted_scores.sum(axis=0) / sum_similarity# Puntuaciones finales
+        
+        deviation = weighted_scores.fillna(0).sum(axis=0) / sum_similarity
+        recommendation_scores = user_mean_rating + deviation
+        
+        # Limitar al rango de calificación 1-5 (alineado con la evaluación del notebook)
+        recommendation_scores = recommendation_scores.clip(lower=1.0, upper=5.0)
+        
         recomendaciones_ordenadas = recommendation_scores.sort_values(ascending=False)# Ordenamos las recomendaciones
         return recomendaciones_ordenadas.head(number_max_of_recommendations).index.tolist()# Retornamos los nombres de los items recomendados
     else:
@@ -300,6 +317,13 @@ app = FastAPI(
     openapi_tags=[{"name": "Sistema recomendador"}]
 )
 
+# Montar archivos estáticos para la interfaz web interactiva
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/", include_in_schema=False)
+def serve_frontend():
+    return FileResponse("static/index.html")
+
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #--- ENDPOINTS DE LA API ---
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -314,8 +338,14 @@ def create_user(user: User):
         with sqlite3.connect(DB_NAME) as conn:
             cursor = conn.cursor()
             
+            # Si el ID es 0 o menor, autogeneramos el siguiente secuencial disponible
+            if user.id <= 0:
+                cursor.execute("SELECT MAX(id) FROM users")
+                row = cursor.fetchone()
+                max_id = row[0] if row and row[0] is not None else 0
+                user.id = max_id + 1
+            
             # Extraemos los datos básicos y los atributos
-            # Usamos model_dump para obtener los valores del modelo UserAttributes
             attr = user.attributes
             
             # Preparamos la consulta SQL
@@ -331,12 +361,15 @@ def create_user(user: User):
                 attr.telephone,
                 attr.birthdate.isoformat() if attr.birthdate else None,
                 attr.gender,
-                attr.created_at.isoformat() if attr.created_at else None
+                attr.created_at.isoformat() if attr.created_at else date.today().isoformat()
             )
             # Ejecutamos la inserción
             cursor.execute(insert_query, values)
             # Guardamos los cambios
             conn.commit() 
+            
+        if not attr.created_at:
+            attr.created_at = date.today()
         return user
     # Manejo de errores específicos de SQLite
     except sqlite3.IntegrityError as e:
@@ -352,6 +385,92 @@ def create_user(user: User):
         raise HTTPException(
             status_code=500, 
             detail={"code": "DB_ERROR", "message": f"Error al crear usuario: {e}"}
+        )
+
+class UserListItem(BaseModel):
+    id: int
+    username: str
+
+@app.get("/users", response_model=List[UserListItem], tags=["Sistema recomendador"])
+def get_all_users(limit: int = Query(500, description="Número de usuarios a obtener.", ge=1, le=1000)):
+    """
+    Obtiene la lista de usuarios registrados para facilitar la selección.
+    """
+    try:
+        with sqlite3.connect(DB_NAME) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, username FROM users ORDER BY id DESC LIMIT ?", (limit,))
+            rows = cursor.fetchall()
+            
+        users_list = []
+        for row in rows:
+            users_list.append(UserListItem(id=row['id'], username=row['username']))
+        return users_list
+    except Exception as e:
+        logging.error(f"Error al consultar usuarios: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={"code": "DB_ERROR", "message": f"Error al consultar usuarios: {str(e)}"}
+        )
+
+class LoginRequest(BaseModel):
+    username: str
+
+@app.post("/login", response_model=User, tags=["Sistema recomendador"])
+def login(req: LoginRequest):
+    """
+    Inicia sesión buscando al usuario por ID numérico o por correo electrónico.
+    """
+    try:
+        with sqlite3.connect(DB_NAME) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            # Intentamos parsear a entero por si es un ID
+            val_id = None
+            try:
+                val_id = int(req.username)
+            except ValueError:
+                pass
+                
+            query = "SELECT id, username, telephone, birthdate, gender, created_at FROM users WHERE username = ? OR id = ?"
+            cursor.execute(query, (req.username, val_id))
+            row = cursor.fetchone()
+            
+        if row is None:
+            raise HTTPException(
+                status_code=404, 
+                detail={"code": "USER_NOT_FOUND", "message": f"Usuario '{req.username}' no encontrado."}
+            )
+            
+        user_dict = dict(row)
+        
+        def safe_parse_date(date_val):
+            if date_val is None or date_val == "":
+                return None
+            return pd.to_datetime(date_val).date()
+            
+        attributes = UserAttributes(
+            telephone=user_dict.get('telephone'),
+            birthdate=safe_parse_date(user_dict.get('birthdate')),
+            gender=user_dict.get('gender'),
+            created_at=safe_parse_date(user_dict.get('created_at'))
+        )
+        
+        return User(
+            id=user_dict['id'],
+            username=user_dict['username'],
+            attributes=attributes
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error al iniciar sesión para {req.username}: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail={"code": "DB_ERROR", "message": f"Error al iniciar sesión: {str(e)}"}
         )
 
 # Endpoint: /user/{userId} (GET)
@@ -394,6 +513,8 @@ def get_user(userId: int):
             attributes=attributes
         )
     # Manejo de errores
+    except HTTPException:
+        raise
     except Exception as e:
         # Esto ayudará a ver qué valor exacto falló si hay otro error
         logging.error(f"Error al obtener usuario {userId}: {e}")
@@ -457,7 +578,7 @@ def create_preference(preference: Preference):
     """
     Registra o actualiza una preferencia de un usuario sobre un ítem.
     """
-    global DF, MATRIX_NORM, USER_SIMILARITY, USERS_DF, ITEMS_DF, ROW_MEAN
+    global DF, MATRIX_NORM, USER_SIMILARITY, USERS_DF, ITEMS_DF, row_mean
     
     try:
         with sqlite3.connect(DB_NAME) as conn:
@@ -482,7 +603,7 @@ def create_preference(preference: Preference):
             conn.commit()
 
         # RECALCULAR MATRICES 
-        DF, MATRIX_NORM, USER_SIMILARITY, USERS_DF, ITEMS_DF, ROW_MEAN = initial_load()
+        DF, MATRIX_NORM, USER_SIMILARITY, USERS_DF, ITEMS_DF, row_mean = initial_load()
         
         return {"code": "SUCCESS", "message": "Preferencia guardada y motor de recomendaciones actualizado"}
     # Manejo de errores
@@ -535,6 +656,70 @@ def get_preference(userId: int, itemId: int):
         raise HTTPException(
             status_code=500, 
             detail={"code": "DB_ERROR", "message": f"Error al consultar preferencia: {str(e)}"}
+        )
+
+# Endpoint: /user/{userId}/preferences (GET)
+# Endpoint para obtener todas las preferencias de un usuario
+@app.get("/user/{userId}/preferences", response_model=List[Preference], tags=["Sistema recomendador"])
+def get_user_preferences(userId: int):
+    """
+    Obtiene todas las calificaciones/preferencias registradas para un usuario.
+    """
+    try:
+        with sqlite3.connect(DB_NAME) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            query = "SELECT user_id, item_id, preference_value FROM preferences WHERE user_id = ?"
+            cursor.execute(query, (userId,))
+            rows = cursor.fetchall()
+        
+        preferences = []
+        for row in rows:
+            preferences.append(Preference(
+                user_id=row['user_id'],
+                item_id=row['item_id'],
+                preference_value=row['preference_value']
+            ))
+        return preferences
+    except Exception as e:
+        logging.error(f"Error al obtener preferencias del usuario {userId}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={"code": "DB_ERROR", "message": f"Error al consultar preferencias: {str(e)}"}
+        )
+
+# Endpoint: /item (GET)
+# Endpoint para obtener el catálogo completo de ítems
+@app.get("/item", response_model=ItemArray, tags=["Sistema recomendador"])
+def get_all_items():
+    """
+    Obtiene el catálogo completo de libros.
+    """
+    try:
+        with sqlite3.connect(DB_NAME) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            query = "SELECT id, name, price, category, description FROM items ORDER BY id ASC"
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            
+        items = []
+        for row in rows:
+            items.append(Item(
+                id=row['id'],
+                name=row['name'],
+                attributes=ItemAttributes(
+                    price=row['price'],
+                    category=row['category'],
+                    description=row['description']
+                )
+            ))
+        return ItemArray(items=items)
+    except Exception as e:
+        logging.error(f"Error al consultar catálogo: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail={"code": "DB_ERROR", "message": f"Error al consultar catálogo: {str(e)}"}
         )
 
 # Endpoint: /item/{itemId} (GET)
@@ -592,7 +777,7 @@ def update_item(itemId: int, item: Item):
     """
     Actualizar el nombre y los atributos (precio, categoría, descripción) de un ítem.
     """
-    global DF, MATRIX_NORM, USER_SIMILARITY, USERS_DF, ITEMS_DF, ROW_MEAN
+    global DF, MATRIX_NORM, USER_SIMILARITY, USERS_DF, ITEMS_DF, row_mean
     
     try:
         with sqlite3.connect(DB_NAME) as conn:
@@ -627,7 +812,7 @@ def update_item(itemId: int, item: Item):
 
         # RECALCULAR MATRICES
         # Esto asegura que el sistema recomendador use el nuevo nombre/precio inmediatamente
-        DF, MATRIX_NORM, USER_SIMILARITY, USERS_DF, ITEMS_DF, ROW_MEAN = initial_load()
+        DF, MATRIX_NORM, USER_SIMILARITY, USERS_DF, ITEMS_DF, row_mean = initial_load()
             
         item.id = itemId
         return item

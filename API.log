@@ -1,0 +1,6 @@
+2026-06-30 16:43:33,506 - root - ERROR - Error al crear/actualizar preferencia: time data "1990-01-01" doesn't match format "%m/%d/%Y", at position 700. You might want to try:
+    - passing `format` if your strings have a consistent format;
+    - passing `format='ISO8601'` if your strings are all ISO8601 but not necessarily in exactly the same format;
+    - passing `format='mixed'`, and the format will be inferred for each element individually. You might want to use `dayfirst` alongside this.
+2026-06-30 16:57:53,516 - root - ERROR - Error de integridad al crear usuario: UNIQUE constraint failed: users.id
+2026-06-30 17:05:28,117 - root - ERROR - Error al obtener usuario 6666666: 404: {'code': 'USER_NOT_FOUND', 'message': '...'}

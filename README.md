@@ -123,6 +123,39 @@ http://127.0.0.1:8000
 ``` 
 Podemos probar la API con herramientas como Thunder Client, Postman o consumirla usarla mediante codigo.
 
+## Aplicación Web Interactiva: Bookverse
+Para validar el sistema recomendador y demostrar su funcionamiento, desarrollamos una aplicación web **SPA (Single Page Application)** con una interfaz de usuario premium, moderna y responsiva servida directamente por FastAPI.
+
+### Características Clave:
+1. **Acceso y Autenticación:**
+   * Pantalla completa de login/registro (`#auth-screen`) con panel informativo de Ciencia de Datos.
+   * **Buscador de Usuarios Demo:** Un popover colapsable con buscador en tiempo real que permite iniciar sesión instantáneamente con cualquiera de los 700 perfiles de prueba de la base de datos para ver cómo cambian las recomendaciones al instante.
+2. **Navegación unificada en Navbar superior:**
+   * **Recomendaciones:** Lista de libros recomendados adaptada dinámicamente al perfil de lectura del usuario (usando filtrado colaborativo).
+   * **Mis Valoraciones:** Listado de todos los libros calificados por el usuario.
+   * **Catálogo Completo:** Biblioteca con filtros rápidos por categoría (Píldoras temáticas: Ficción, Programación, Cocina, Negocios, Bienestar, Ciencia) y barra de búsqueda.
+   * **Estadísticas de Lectura:** Tablero visual interactivo que calcula en tiempo real métricas de lectura (total valorados, calificación promedio, categoría favorita) y dibuja barras porcentuales de distribución de géneros.
+   * **Dropdown de Perfil:** Muestra el correo electrónico del usuario activo en la navbar superior, con un dropdown para abrir **Mi Perfil** (en un modal flotante con formato de fecha argentino `DD/MM/YYYY`) o para **Cerrar Sesión**.
+3. **Optimización de Portadas Reales (Anti-429):**
+   * El sistema cuenta con un caché local pre-descargado en `/static/covers` para 100 libros reales de Open Library. Esto previene el error `429 (Too Many Requests)` en el navegador.
+   * Las portadas tienen diseño 3D físico (marcado de lomo) y una animación interactiva hover que las inclina y escala levemente.
+4. **Cantidad Ajustable de Recomendaciones:**
+   * Incluye un selector deslizante en la pestaña de recomendaciones para elegir cuántos libros sugerir (3, 5, 10, 15 o 20 libros). Al modificarlo, el motor recalcula las sugerencias en milisegundos.
+
+### Cómo Ejecutar y Probar la Demo:
+1. Asegúrate de tener el servidor corriendo:
+   ```console
+   uvicorn API:app --reload
+   ```
+2. Abre tu navegador e ingresa a la aplicación web:
+   ```http
+   http://127.0.0.1:8000/static/index.html
+   ```
+3. Haz clic en **"Ver usuarios de prueba (Demo)"**, escribe un ID (e.g., `350`) o selecciona cualquier correo de la lista.
+4. Una vez dentro, califica nuevos libros en el catálogo con estrellas y observa cómo se recalculan al instante las recomendaciones, estadísticas e historiales.
+
+***
+
 ## Información de la versión
 En el archivo **version_notes.md** se describen los cambios realizados en esta versión respecto a la anterior.
 

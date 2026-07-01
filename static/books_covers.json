@@ -1,0 +1,402 @@
+{
+    "El Hobbit": {
+        "author": "J.R.R. Tolkien",
+        "coverUrl": "/static/covers/book_1.jpg"
+    },
+    "Los Pilares de la Tierra": {
+        "author": "Ken Follett",
+        "coverUrl": "/static/covers/book_2.jpg"
+    },
+    "El Inversor Inteligente": {
+        "author": "Benjamin Graham",
+        "coverUrl": "/static/covers/book_3.jpg"
+    },
+    "El Arte de la Cocina Francesa": {
+        "author": "Julia Child",
+        "coverUrl": "/static/covers/book_4.jpg"
+    },
+    "Prisioneros de la Geografía": {
+        "author": "Tim Marshall",
+        "coverUrl": "/static/covers/book_5.jpg"
+    },
+    "Clean Code": {
+        "author": "Robert C. Martin",
+        "coverUrl": "/static/covers/book_6.jpg"
+    },
+    "El Psicoanalista": {
+        "author": "John Katzenbach",
+        "coverUrl": "/static/covers/book_7.jpg"
+    },
+    "El Poder del Ahora": {
+        "author": "Eckhart Tolle",
+        "coverUrl": "/static/covers/book_8.jpg"
+    },
+    "Veinte Poemas de Amor y una Cancion Desesperada": {
+        "author": "Pablo Neruda",
+        "coverUrl": "/static/covers/book_9.jpg"
+    },
+    "La ridicula idea de no volver a verte": {
+        "author": "Rosa Montero",
+        "coverUrl": "/static/covers/book_10.jpg"
+    },
+    "1984": {
+        "author": "George Orwell",
+        "coverUrl": "/static/covers/book_11.jpg"
+    },
+    "Historia del Arte": {
+        "author": "E.H. Gombrich",
+        "coverUrl": "/static/covers/book_12.jpg"
+    },
+    "Los 7 Habitos de la Gente Altamente Efectiva": {
+        "author": "Stephen R. Covey",
+        "coverUrl": "/static/covers/book_13.jpg"
+    },
+    "Larousse Postres": {
+        "author": "Larousse Editorial",
+        "coverUrl": "/static/covers/book_14.jpg"
+    },
+    "Cosmos": {
+        "author": "Carl Sagan",
+        "coverUrl": "/static/covers/book_15.jpg"
+    },
+    "JavaScript The Good Parts": {
+        "author": "Douglas Crockford",
+        "coverUrl": "/static/covers/book_16.jpg"
+    },
+    "Diez Negritos": {
+        "author": "Agatha Christie",
+        "coverUrl": "/static/covers/book_17.jpg"
+    },
+    "Biografia del Silencio": {
+        "author": "Pablo d'Ors",
+        "coverUrl": "/static/covers/book_18.jpg"
+    },
+    "Rimas y Leyendas": {
+        "author": "Gustavo Adolfo Bécquer",
+        "coverUrl": "/static/covers/book_19.jpg"
+    },
+    "Breve Historia del Tiempo": {
+        "author": "Stephen Hawking",
+        "coverUrl": "/static/covers/book_20.jpg"
+    },
+    "Harry Potter y la Piedra Filosofal": {
+        "author": "J.K. Rowling",
+        "coverUrl": "/static/covers/book_21.jpg"
+    },
+    "Yo Claudio": {
+        "author": "Robert Graves",
+        "coverUrl": "/static/covers/book_22.jpg"
+    },
+    "Padre Rico Padre Pobre": {
+        "author": "Robert T. Kiyosaki",
+        "coverUrl": "/static/covers/book_23.jpg"
+    },
+    "La Cuchara de Plata": {
+        "author": "Phaidon Press",
+        "coverUrl": "/static/covers/book_24.jpg"
+    },
+    "El choque de civilizaciones": {
+        "author": "Samuel P. Huntington",
+        "coverUrl": "/static/covers/book_25.jpg"
+    },
+    "Design Patterns": {
+        "author": "Erich Gamma",
+        "coverUrl": "/static/covers/book_26.jpg"
+    },
+    "Asesinato en el Orient Express": {
+        "author": "Agatha Christie",
+        "coverUrl": "/static/covers/book_27.jpg"
+    },
+    "Comer para no morir": {
+        "author": "Michael Greger",
+        "coverUrl": "/static/covers/book_28.jpg"
+    },
+    "Poeta en Nueva York": {
+        "author": "Federico García Lorca",
+        "coverUrl": "/static/covers/book_29.jpg"
+    },
+    "El universo elegante": {
+        "author": "Brian Greene",
+        "coverUrl": "/static/covers/book_30.jpg"
+    },
+    "El Senor de los Anillos": {
+        "author": "J.R.R. Tolkien",
+        "coverUrl": "/static/covers/book_31.jpg"
+    },
+    "La caida de los gigantes": {
+        "author": "Ken Follett",
+        "coverUrl": "/static/covers/book_32.jpg"
+    },
+    "El hombre mas rico de Babilonia": {
+        "author": "George S. Clason",
+        "coverUrl": "/static/covers/book_33.jpg"
+    },
+    "El pan de cada dia": {
+        "author": "Xavier Barriga",
+        "coverUrl": "/static/covers/book_34.jpg"
+    },
+    "Mapas del tiempo": {
+        "author": "David Christian",
+        "coverUrl": "/static/covers/book_35.jpg"
+    },
+    "Designing Data-Intensive Applications": {
+        "author": "Martin Kleppmann",
+        "coverUrl": "/static/covers/book_36.jpg"
+    },
+    "La verdad sobre el caso Harry Quebert": {
+        "author": "Joël Dicker",
+        "coverUrl": "/static/covers/book_37.jpg"
+    },
+    "El cerebro del nino": {
+        "author": "Daniel J. Siegel",
+        "coverUrl": "/static/covers/book_38.jpg"
+    },
+    "Hojas de Hierba": {
+        "author": "Walt Whitman",
+        "coverUrl": "/static/covers/book_39.jpg"
+    },
+    "Sapiens": {
+        "author": "Yuval Noah Harari",
+        "coverUrl": "/static/covers/book_40.jpg"
+    },
+    "El nombre del viento": {
+        "author": "Patrick Rothfuss",
+        "coverUrl": "/static/covers/book_41.jpg"
+    },
+    "El Capitan Alatriste": {
+        "author": "Arturo Pérez-Reverte",
+        "coverUrl": "/static/covers/book_42.jpg"
+    },
+    "El Patron Bitcoin": {
+        "author": "Saifedean Ammous",
+        "coverUrl": "/static/covers/book_43.jpg"
+    },
+    "Como agua para chocolate": {
+        "author": "Laura Esquivel",
+        "coverUrl": "/static/covers/book_44.jpg"
+    },
+    "La venganza de la geografia": {
+        "author": "Robert D. Kaplan",
+        "coverUrl": "/static/covers/book_45.jpg"
+    },
+    "Introduction to Algorithms": {
+        "author": "Thomas H. Cormen",
+        "coverUrl": "/static/covers/book_46.jpg"
+    },
+    "El codigo Da Vinci": {
+        "author": "Dan textBrown",
+        "coverUrl": "/static/covers/book_47.jpg"
+    },
+    "Autobiografia de un Yogui": {
+        "author": "Paramahansa Yogananda",
+        "coverUrl": "/static/covers/book_48.jpg"
+    },
+    "Antologia poetica de Mario Benedetti": {
+        "author": "Mario Benedetti",
+        "coverUrl": "/static/covers/book_49.jpg"
+    },
+    "El gen egoista": {
+        "author": "Richard Dawkins",
+        "coverUrl": "/static/covers/book_50.jpg"
+    },
+    "Juego de Tronos": {
+        "author": "George R.R. Martin",
+        "coverUrl": "/static/covers/book_51.jpg"
+    },
+    "La lista de Schindler": {
+        "author": "Thomas Keneally",
+        "coverUrl": "/static/covers/book_52.jpg"
+    },
+    "El lobo de Wall Street": {
+        "author": "Jordan Belfort",
+        "coverUrl": "/static/covers/book_53.jpg"
+    },
+    "La cocina de Yoshihiro": {
+        "author": "Yoshihiro Murata",
+        "coverUrl": "/static/covers/book_54.jpg"
+    },
+    "Esto lo cambia todo": {
+        "author": "Naomi Klein",
+        "coverUrl": "/static/covers/book_55.jpg"
+    },
+    "The Art of Deception": {
+        "author": "Kevin D. Mitnick",
+        "coverUrl": "/static/covers/book_56.jpg"
+    },
+    "La chica del tren": {
+        "author": "Paula Hawkins",
+        "coverUrl": "/static/covers/book_57.jpg"
+    },
+    "El hombre en busca de sentido": {
+        "author": "Viktor E. Frankl",
+        "coverUrl": "/static/covers/book_58.jpg"
+    },
+    "Los heraldos negros": {
+        "author": "César Vallejo",
+        "coverUrl": "/static/covers/book_59.jpg"
+    },
+    "El heroe de las mil caras": {
+        "author": "Joseph Campbell",
+        "coverUrl": "/static/covers/book_60.jpg"
+    },
+    "Percy Jackson y el ladron del rayo": {
+        "author": "Rick Riordan",
+        "coverUrl": "/static/covers/book_61.jpg"
+    },
+    "El nombre de la rosa": {
+        "author": "Umberto Eco",
+        "coverUrl": "/static/covers/book_62.jpg"
+    },
+    "Pensar rapido pensar despacio": {
+        "author": "Daniel Kahneman",
+        "coverUrl": "/static/covers/book_63.jpg"
+    },
+    "Cocina con firma": {
+        "author": "Karlos Arguiñano",
+        "coverUrl": "/static/covers/book_64.jpg"
+    },
+    "El colapso de las sociedades": {
+        "author": "Jared Diamond",
+        "coverUrl": "/static/covers/book_65.jpg"
+    },
+    "Refactoring": {
+        "author": "Martin Fowler",
+        "coverUrl": "/static/covers/book_66.jpg"
+    },
+    "El silencio de los corderos": {
+        "author": "Thomas Harris",
+        "coverUrl": "/static/covers/book_67.jpg"
+    },
+    "Habitos atomicos": {
+        "author": "James Clear",
+        "coverUrl": "/static/covers/book_68.jpg"
+    },
+    "Ficciones": {
+        "author": "Jorge Luis Borges",
+        "coverUrl": "/static/covers/book_69.jpg"
+    },
+    "Una breve historia de casi todo": {
+        "author": "Bill Bryson",
+        "coverUrl": "/static/covers/book_70.jpg"
+    },
+    "Fahrenheit 451": {
+        "author": "Ray Bradbury",
+        "coverUrl": "/static/covers/book_71.jpg"
+    },
+    "Historia de dos ciudades": {
+        "author": "Charles Dickens",
+        "coverUrl": "/static/covers/book_72.jpg"
+    },
+    "La transformacion total de su dinero": {
+        "author": "Dave Ramsey",
+        "coverUrl": "/static/covers/book_73.jpg"
+    },
+    "Pasteleria de moda": {
+        "author": "Christophe Felder",
+        "coverUrl": "/static/covers/book_74.jpg"
+    },
+    "Mapas de la mente": {
+        "author": "Tony Buzan",
+        "coverUrl": "/static/covers/book_75.jpg"
+    },
+    "Compilers Principles Techniques and Tools": {
+        "author": "Alfred V. Aho",
+        "coverUrl": "/static/covers/book_76.jpg"
+    },
+    "Perdida": {
+        "author": "Gillian Flynn",
+        "coverUrl": "/static/covers/book_77.jpg"
+    },
+    "El arte de no amargarse la vida": {
+        "author": "Rafael Santandreu",
+        "coverUrl": "/static/covers/book_78.jpg"
+    },
+    "Desolacion": {
+        "author": "Gabriela Mistral",
+        "coverUrl": "/static/covers/book_79.jpg"
+    },
+    "El gran diseno": {
+        "author": "Stephen Hawking",
+        "coverUrl": "/static/covers/book_80.jpg"
+    },
+    "Cronicas de Narnia": {
+        "author": "C.S. Lewis",
+        "coverUrl": "/static/covers/book_81.jpg"
+    },
+    "Los Borgia": {
+        "author": "Mario Puzo",
+        "coverUrl": "/static/covers/book_82.jpg"
+    },
+    "Freakonomics": {
+        "author": "Steven D. Levitt",
+        "coverUrl": "/static/covers/book_83.jpg"
+    },
+    "Salsas de todo el mundo": {
+        "author": "Coleccion Cocina",
+        "coverUrl": "/static/covers/book_84.jpg"
+    },
+    "Orden mundial": {
+        "author": "Henry Kissinger",
+        "coverUrl": "/static/covers/book_85.jpg"
+    },
+    "Architecting for the Cloud": {
+        "author": "AWS whitepapers",
+        "coverUrl": "/static/covers/book_86.jpg"
+    },
+    "Misery": {
+        "author": "Stephen King",
+        "coverUrl": "/static/covers/book_87.jpg"
+    },
+    "Anatomia del Yoga": {
+        "author": "Leslie Kaminoff",
+        "coverUrl": "/static/covers/book_88.jpg"
+    },
+    "Odas elementales": {
+        "author": "Pablo Neruda",
+        "coverUrl": "/static/covers/book_89.jpg"
+    },
+    "El camino de los reyes": {
+        "author": "Brandon Sanderson",
+        "coverUrl": "/static/covers/book_90.jpg"
+    },
+    "Fundacion": {
+        "author": "Isaac Asimov",
+        "coverUrl": "/static/covers/book_91.jpg"
+    },
+    "Lo que el viento se llevo": {
+        "author": "Margaret Mitchell",
+        "coverUrl": "/static/covers/book_92.jpg"
+    },
+    "El capital en el siglo XXI": {
+        "author": "Thomas Piketty",
+        "coverUrl": "/static/covers/book_93.jpg"
+    },
+    "Vegetariano con amor": {
+        "author": "Sarah Britton",
+        "coverUrl": "/static/covers/book_94.jpg"
+    },
+    "La Tierra herida": {
+        "author": "Miguel Delibes",
+        "coverUrl": "/static/covers/book_95.jpg"
+    },
+    "Superinteligencia": {
+        "author": "Nick Bostrom",
+        "coverUrl": "/static/covers/book_96.jpg"
+    },
+    "El sabueso de los Baskerville": {
+        "author": "Arthur Conan Doyle",
+        "coverUrl": "/static/covers/book_97.jpg"
+    },
+    "Entrenamiento funcional": {
+        "author": "Juan Carlos Santana",
+        "coverUrl": "/static/covers/book_98.jpg"
+    },
+    "Poemas y antipoemas": {
+        "author": "Nicanor Parra",
+        "coverUrl": "/static/covers/book_99.jpg"
+    },
+    "El marciano": {
+        "author": "Andy Weir",
+        "coverUrl": "/static/covers/book_100.jpg"
+    }
+}
