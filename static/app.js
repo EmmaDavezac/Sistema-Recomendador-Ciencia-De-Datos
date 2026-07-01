@@ -61,7 +61,7 @@ async function init() {
     if (savedUserId) {
         await loadUser(parseInt(savedUserId));
         
-        // Conmutar pestaña si se pasa por parámetro (e.g. ?tab=stats)
+        // Conmutar pestaña si se pasa por parámetro (por ejemplo, ?tab=stats)
         const urlTab = urlParams.get('tab');
         if (urlTab) {
             const tabBtn = document.querySelector(`.nav-tab-btn[data-tab="${urlTab}"]`);
