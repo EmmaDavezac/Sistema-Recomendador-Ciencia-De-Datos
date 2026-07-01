@@ -2,7 +2,7 @@
 ## Ciencia de datos - Sistema recomendador
 Proyecto desarrollado por 
 * Emmanuel Davezac
-*  poner los otros nombres
+* Nicolas Morales
 
 ***
 
